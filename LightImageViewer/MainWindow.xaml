@@ -11,7 +11,7 @@
     </Window.Background>
     <Grid Margin="0" ClipToBounds="True">
         <my:MyCanvas x:Name="canvas" Margin="0" ImgLeft="0" ImgTop="0"
-                     MouseUp="imageField_MouseUp" MouseMove="imageField_MouseMove" MouseDown="imageField_MouseDown" MouseLeave="imageField_MouseLeave" ClipToBounds="True"/>
+                     MouseUp="imageField_MouseUp" MouseMove="imageField_MouseMove" MouseDown="imageField_MouseDown" ClipToBounds="True"/>
         <Button Height="100" VerticalAlignment="Top" HorizontalAlignment="Right" Width="100" Click="Button_Click" BorderBrush="{x:Null}" Margin="0,-40,-40,0">
             <Button.Style>
                 <Style TargetType="{x:Type Button}">
@@ -44,6 +44,5 @@
                 </Image.OpacityMask>
             </Image>
         </Button>
-        <TextBlock x:Name="text" Margin="10,0,10,10" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Bottom" Height="20" Background="#FFE2925A" Opacity="0"/>
     </Grid>
 </Window>
