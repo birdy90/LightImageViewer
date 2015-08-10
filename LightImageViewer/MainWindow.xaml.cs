@@ -181,6 +181,8 @@ namespace LightImageViewer
             var b = (oldWidth - width) * (canvas.ImgLeft - mp.X) / oldWidth;
             canvas.ImgLeft -= b;
             canvas.ImgTop -= a;
+
+            canvas.InvalidateVisual();
         }
 
         /// <summary>
