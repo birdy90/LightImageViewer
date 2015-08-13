@@ -116,7 +116,7 @@ namespace LightImageViewer
                 if (canvas.CurrentImage != null)
                 {
                     //canvas.CurrentImage.Source = canvas.PrecacheBmp((int)canvas.CurrentImage.Width, (int)canvas.CurrentImage.Height);
-                    canvas.UpdateImageSource();
+                    //canvas.UpdateImageSource();
                 }
             }));
             _recaching = false;

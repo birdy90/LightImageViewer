@@ -1,11 +1,15 @@
-﻿using System;
+﻿using ImageMagick;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -17,7 +21,7 @@ namespace LightImageViewer
         /// Путь до текущего изображения
         /// </summary>
         private string _currentPath;
-        private Image _img;
+        private System.Windows.Controls.Image _img;
 
         private Uri _uri;
 
@@ -43,7 +47,7 @@ namespace LightImageViewer
             set
             {
                 // если путь тот же, то игнорируем
-                if (string.Equals(_currentPath, value)) return;
+                /*if (string.Equals(_currentPath, value)) return;
 
                 _currentPath = value;
                 GetUri();
@@ -77,14 +81,76 @@ namespace LightImageViewer
                 UpdateImageSource();
                 Children.Clear();
                 GC.Collect();
+                Children.Add(_img);*/
+
+                if (string.Equals(_currentPath, value)) return;
+                _currentPath = value;
+                GetUri();
+
+                var mis = new MagickReadSettings();
+                mis.UseMonochrome = true;
+                mis.Height = 100;
+                mis.Width = 100;
+                mis.Density = new PointD(0.1d, 0.1d);
+                var mi = new MagickImage(value, mis);
+                mi.Interpolate = PixelInterpolateMethod.Average16;
+                GetBmpParameters(mi);
+
+                CurrentImage = _img = new System.Windows.Controls.Image();
+                _img.Stretch = Stretch.Fill;
+                var usedSize = 0d;
+                if (_widthBigger)
+                {
+                    usedSize = Math.Min(ActualWidth, _bmpWidth);
+                    _img.Width = usedSize;
+                    _img.Height = usedSize / _aspect;
+                    ImgTop = ActualHeight / 2d - _img.Height / 2d;
+                    ImgLeft = ActualWidth / 2d - usedSize / 2d;
+                }
+                else
+                {
+                    usedSize = Math.Min(ActualHeight, _bmpHeight);
+                    _img.Height = usedSize;
+                    _img.Width = usedSize * _aspect;
+                    ImgTop = ActualHeight / 2d - usedSize / 2d;
+                    ImgLeft = ActualWidth / 2d - _img.Width / 2d;
+                }
+
+                mi.Resize((int)_img.Width, (int)_img.Height);
+                //mi.Crop(100, 100);
+                UpdateImageSource(mi);
+                Children.Clear();
+                GC.Collect();
                 Children.Add(_img);
+                InvalidateVisual();
+            }
+        }
+
+        public BitmapImage ToBitmapImage(Bitmap bitmap)
+        {
+            using (var memory = new MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Png);
+                memory.Position = 0;
+
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad; 
+                if (_widthBigger)
+                    bitmapImage.DecodePixelWidth = Math.Min(width, _bmpWidth);
+                else
+                    bitmapImage.DecodePixelHeight = Math.Min(height, _bmpHeight);
+                bitmapImage.EndInit();
+
+                return bitmapImage;
             }
         }
 
         /// <summary>
         /// Текущий отрисовываемый объект Image
         /// </summary>
-        public Image CurrentImage { get; set; }
+        public System.Windows.Controls.Image CurrentImage { get; set; }
 
         /// <summary>
         /// Горизонтальное положение изображения
@@ -104,23 +170,9 @@ namespace LightImageViewer
         /// <param name="width">Ширина изображения на экране</param>
         /// <param name="height">Высота изображения на экране</param>
         /// <returns></returns>
-        public BitmapImage PrecacheBmp(int width, int height)
+        public BitmapImage PrecacheBmp(MagickImage mi, int width, int height)
         {
-            GetUri();
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.None;
-            // уловие, в зависимости от того, горизонтальное изображение или вертикальное,
-            // указывает битмапу, каков требуемый размер изображения в пикселях. Задаётся только
-            // одно измерение, второе будет сформировано автоматически в соответствии
-            // с соотношением сторон изображения. "Загружаемый размер" не должен превышать
-            // настоящий размер изображения
-            if (_widthBigger)
-                bmp.DecodePixelWidth = Math.Min(width, _bmpWidth);
-            else
-                bmp.DecodePixelHeight = Math.Min(height, _bmpHeight);
-            bmp.UriSource = _uri;
-            bmp.EndInit();
+            var bmp = ToBitmapImage(mi.ToBitmap());
             InvalidateVisual();
             return bmp;
         }
@@ -129,16 +181,10 @@ namespace LightImageViewer
         /// Получение характеристик текущего изображения. Нужно для определения его реального размера в пикселях,
         /// соотношения сторон и определения, вертикальное изображение или горизонтальное
         /// </summary>
-        private void GetBmpParameters()
+        private void GetBmpParameters(MagickImage image)
         {
-            GetUri();
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.None;
-            bmp.UriSource = _uri;
-            bmp.EndInit();
-            _bmpHeight = bmp.PixelHeight;
-            _bmpWidth = bmp.PixelWidth;
+            _bmpHeight = image.Height;
+            _bmpWidth = image.Width;
             if (_bmpHeight > ActualHeight)
                 _hCount = (int)Math.Ceiling(_bmpHeight / ActualHeight);
             if (_bmpWidth > ActualWidth)
@@ -162,13 +208,9 @@ namespace LightImageViewer
             }
         }
 
-        public void UpdateImageSource()
+        public void UpdateImageSource(MagickImage mi)
         {
-            GetUri();
-            if ((_currentPath.Split('.').Last() as String).ToLower() == "gif")
-                (_img as AnimatedImage).Source = PrecacheBmp((int)_img.Width, (int)_img.Height);
-            else
-                _img.Source = PrecacheBmp((int)_img.Width, (int)_img.Height);
+            _img.Source = PrecacheBmp(mi, (int)_img.Width, (int)_img.Height);
         }
         
         protected override void OnRender(DrawingContext dc)
