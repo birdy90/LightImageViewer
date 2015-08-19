@@ -88,12 +88,9 @@ namespace LightImageViewer
                 GetUri();
 
                 var mis = new MagickReadSettings();
-                mis.UseMonochrome = true;
                 mis.Height = 100;
                 mis.Width = 100;
-                mis.Density = new PointD(0.1d, 0.1d);
                 var mi = new MagickImage(value, mis);
-                mi.Interpolate = PixelInterpolateMethod.Average16;
                 GetBmpParameters(mi);
 
                 CurrentImage = _img = new System.Windows.Controls.Image();
@@ -116,8 +113,6 @@ namespace LightImageViewer
                     ImgLeft = ActualWidth / 2d - _img.Width / 2d;
                 }
 
-                mi.Resize((int)_img.Width, (int)_img.Height);
-                //mi.Crop(100, 100);
                 UpdateImageSource(mi);
                 Children.Clear();
                 GC.Collect();
@@ -138,9 +133,9 @@ namespace LightImageViewer
                 bitmapImage.StreamSource = memory;
                 bitmapImage.CacheOption = BitmapCacheOption.OnLoad; 
                 if (_widthBigger)
-                    bitmapImage.DecodePixelWidth = Math.Min(width, _bmpWidth);
+                    bitmapImage.DecodePixelWidth = Math.Min((int)_img.ActualWidth, _bmpWidth);
                 else
-                    bitmapImage.DecodePixelHeight = Math.Min(height, _bmpHeight);
+                    bitmapImage.DecodePixelHeight = Math.Min((int)_img.ActualHeight, _bmpHeight);
                 bitmapImage.EndInit();
 
                 return bitmapImage;
