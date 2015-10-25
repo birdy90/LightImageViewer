@@ -3,15 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:my="clr-namespace:LightImageViewer"
         x:Name="MyWindow"
-        Title="MainWindow" Height="700" Width="700" AllowsTransparency="True" WindowStyle="None" 
+        Title="MainWindow" Height="700" Width="700" 
         HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Hidden" 
-        ScrollViewer.HorizontalScrollBarVisibility="Hidden" Loaded="Window_Loaded" MouseWheel="Window_MouseWheel" HorizontalAlignment="Center" VerticalAlignment="Center" KeyDown="MyWindow_KeyDown">
+        ScrollViewer.HorizontalScrollBarVisibility="Hidden" Loaded="Window_Loaded" MouseWheel="Window_MouseWheel" KeyDown="MyWindow_KeyDown" AllowsTransparency="True" WindowStyle="None" SnapsToDevicePixels="True">
     <Window.Background>
         <SolidColorBrush Color="Black" Opacity="0.7"/>
     </Window.Background>
     <Grid Margin="0" ClipToBounds="True">
         <my:MyCanvas x:Name="canvas" Margin="0" ImgLeft="0" ImgTop="0"
-                     MouseUp="imageField_MouseUp" MouseMove="imageField_MouseMove" MouseDown="imageField_MouseDown" ClipToBounds="True"/>
+                     MouseUp="imageField_MouseUp" MouseMove="imageField_MouseMove" MouseDown="imageField_MouseDown"/>
         <Button Height="100" VerticalAlignment="Top" HorizontalAlignment="Right" Width="100" Click="Button_Click" BorderBrush="{x:Null}" Margin="0,-40,-40,0">
             <Button.Style>
                 <Style TargetType="{x:Type Button}">

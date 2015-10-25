@@ -74,13 +74,14 @@ namespace LightImageViewer
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            Matrix m = PresentationSource.FromVisual(Application.Current.MainWindow).CompositionTarget.TransformToDevice;
             // окно можно растянуть (так чтобы у него не было рамки и чтобы оно не закрывало панель задач)
             // только вручную, что и сделано тут
             var currentScreen = System.Windows.Forms.Screen.FromPoint(System.Windows.Forms.Cursor.Position);
             Left = currentScreen.WorkingArea.X;
             Top = currentScreen.WorkingArea.Y;
-            Height = currentScreen.WorkingArea.Height;
-            Width = currentScreen.WorkingArea.Width;
+            Height = currentScreen.WorkingArea.Height / m.M11;
+            Width = currentScreen.WorkingArea.Width / m.M22;
         }
 
         /// <summary>
