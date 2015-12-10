@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using LightImageViewer.Helpers;
+using System;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using WpfAnimatedGif;
 
 namespace LightImageViewer
 {
@@ -28,6 +26,14 @@ namespace LightImageViewer
         private bool _widthBigger = false;
         private double _aspect = 1;
 
+        public MyCanvas()
+        {
+            Img = new Image();
+            Children.Add(Img);
+            Img.Stretch = Stretch.Fill;
+            CurrentImage = Img;
+        }
+
         /// <summary>
         /// Путь до текущего изображения. Задание пути инициирует создание нового изображения,
         /// загружаемого по указанному пути (задаются новые размеры и положение изображения).
@@ -44,40 +50,33 @@ namespace LightImageViewer
             {
                 // если путь тот же, то игнорируем
                 if (string.Equals(_currentPath, value)) return;
-
+                
                 _currentPath = value;
                 GetUri();
-                if ((_currentPath.Split('.').Last() as String).ToLower() == "gif")
-                    _img = new AnimatedImage();
-                else
-                    _img = new Image();
-                _img.Stretch = Stretch.Fill;
+                ImageBehavior.SetAnimatedSource(Img, null);
 
                 GetBmpParameters();
-
-                CurrentImage = _img;
+                
                 var usedSize = 0d;
                 if (_widthBigger)
                 {
                     usedSize = Math.Min(ActualWidth, _bmpWidth);
-                    _img.Width = usedSize;
-                    _img.Height = usedSize / _aspect;
-                    ImgTop = ActualHeight / 2d - _img.Height / 2d;
+                    Img.Width = usedSize;
+                    Img.Height = usedSize / _aspect;
+                    ImgTop = ActualHeight / 2d - Img.Height / 2d;
                     ImgLeft = ActualWidth / 2d - usedSize / 2d;
                 }
                 else
                 {
                     usedSize = Math.Min(ActualHeight, _bmpHeight);
-                    _img.Height = usedSize;
-                    _img.Width = usedSize * _aspect;
+                    Img.Height = usedSize;
+                    Img.Width = usedSize * _aspect;
                     ImgTop = ActualHeight / 2d - usedSize / 2d;
-                    ImgLeft = ActualWidth / 2d - _img.Width / 2d;
+                    ImgLeft = ActualWidth / 2d - Img.Width / 2d;
                 }
-                CurrentImage = _img;
                 UpdateImageSource();
-                Children.Clear();
+                InvalidateVisual();
                 GC.Collect();
-                Children.Add(_img);
             }
         }
 
@@ -96,6 +95,19 @@ namespace LightImageViewer
         /// </summary>
         public double ImgTop { get; set; }
 
+        public Image Img
+        {
+            get
+            {
+                return _img;
+            }
+
+            set
+            {
+                _img = value;
+            }
+        }
+
         /// <summary>
         /// Перекэширование изображения. Необходимо для подзагрузки новой копии изображения,
         /// плотность пикселей которого будет совпадать с плотностью пикселей экрана. Таким образом,
@@ -107,22 +119,38 @@ namespace LightImageViewer
         public BitmapImage PrecacheBmp(int width, int height)
         {
             GetUri();
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.None;
-            // уловие, в зависимости от того, горизонтальное изображение или вертикальное,
-            // указывает битмапу, каков требуемый размер изображения в пикселях. Задаётся только
-            // одно измерение, второе будет сформировано автоматически в соответствии
-            // с соотношением сторон изображения. "Загружаемый размер" не должен превышать
-            // настоящий размер изображения
-            if (_widthBigger)
-                bmp.DecodePixelWidth = Math.Min(width, _bmpWidth);
-            else
-                bmp.DecodePixelHeight = Math.Min(height, _bmpHeight);
-            bmp.UriSource = _uri;
-            bmp.EndInit();
-            InvalidateVisual();
-            return bmp;
+            switch (_uri.Segments.Last().Split('.').Last())
+            {
+                case "svg":
+                    var svg = Svg.SvgDocument.Open(_uri.LocalPath);
+                    InvalidateVisual();
+                    var wScale = width / svg.Width;
+                    var hScale = height / svg.Height;
+                    //svg.Transforms.Add(new Svg.Transforms.SvgScale(1/wScale, 1/hScale));
+                    var w = svg.Width * wScale;
+                    var h = svg.Height * hScale;
+                    svg.Width = w;
+                    svg.Height = h;
+                    return svg.Draw().ToBitmapImage();
+                case "gif":
+                    return null;
+                default:
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.CacheOption = BitmapCacheOption.None;
+                    // уловие, в зависимости от того, горизонтальное изображение или вертикальное,
+                    // указывает битмапу, каков требуемый размер изображения в пикселях. Задаётся только
+                    // одно измерение, второе будет сформировано автоматически в соответствии
+                    // с соотношением сторон изображения. "Загружаемый размер" не должен превышать
+                    // настоящий размер изображения
+                    if (_widthBigger)
+                        bmp.DecodePixelWidth = Math.Min(width, _bmpWidth);
+                    else
+                        bmp.DecodePixelHeight = Math.Min(height, _bmpHeight);
+                    bmp.UriSource = _uri;
+                    bmp.EndInit();
+                    return bmp;
+            }
         }
 
         /// <summary>
@@ -132,18 +160,38 @@ namespace LightImageViewer
         private void GetBmpParameters()
         {
             GetUri();
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.None;
-            bmp.UriSource = _uri;
-            bmp.EndInit();
+
+            BitmapImage bmp = null;
+            switch (_uri.Segments.Last().Split('.').Last())
+            {
+                case "svg":
+                    var svg = Svg.SvgDocument.Open(_uri.LocalPath);
+                    bmp = svg.Draw().ToBitmapImage();
+                    break;
+                case "gif":
+                    bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.UriSource = _uri;
+                    bmp.EndInit();
+                    ImageBehavior.SetAnimatedSource(Img, bmp);
+                    break;
+                default:
+                    bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.CacheOption = BitmapCacheOption.None;
+                    bmp.UriSource = _uri;
+                    bmp.EndInit();
+                    break;
+            }
+            
             _bmpHeight = bmp.PixelHeight;
             _bmpWidth = bmp.PixelWidth;
             if (_bmpHeight > ActualHeight)
                 _hCount = (int)Math.Ceiling(_bmpHeight / ActualHeight);
             if (_bmpWidth > ActualWidth)
                 _wCount = (int)Math.Ceiling(_bmpWidth / ActualWidth);
-            _aspect = (double)_bmpWidth / (double)_bmpHeight;
+            _aspect = (double)_bmpWidth / _bmpHeight;
 
             _widthBigger = false;
             if (ActualWidth / ActualHeight < _aspect)
@@ -165,18 +213,15 @@ namespace LightImageViewer
         public void UpdateImageSource()
         {
             GetUri();
-            if ((_currentPath.Split('.').Last() as String).ToLower() == "gif")
-                (_img as AnimatedImage).Source = PrecacheBmp((int)_img.Width, (int)_img.Height);
-            else
-                _img.Source = PrecacheBmp((int)_img.Width, (int)_img.Height);
+            Img.Source = PrecacheBmp((int)Img.Width, (int)Img.Height);
         }
         
         protected override void OnRender(DrawingContext dc)
         {
             if (CurrentImage == null) return;
 
-            Canvas.SetTop(CurrentImage, ImgTop);
-            Canvas.SetLeft(CurrentImage, ImgLeft);
+            SetTop(CurrentImage, ImgTop);
+            SetLeft(CurrentImage, ImgLeft);
         }
     }
 }

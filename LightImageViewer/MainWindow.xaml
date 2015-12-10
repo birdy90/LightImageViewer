@@ -11,7 +11,13 @@
     </Window.Background>
     <Grid Margin="0" ClipToBounds="True">
         <my:MyCanvas x:Name="canvas" Margin="0" ImgLeft="0" ImgTop="0"
-                     MouseUp="imageField_MouseUp" MouseMove="imageField_MouseMove" MouseDown="imageField_MouseDown"/>
+                     MouseUp="imageField_MouseUp" MouseMove="imageField_MouseMove" MouseDown="imageField_MouseDown">
+        </my:MyCanvas>
+        <Label x:Name="labelName" Content="" Canvas.Left="301" Canvas.Top="508" Height="30" VerticalAlignment="Bottom" VerticalContentAlignment="Center" Margin="0,0,100,0" Foreground="#FFF7F7F7">
+            <Label.Background>
+                <SolidColorBrush Color="#FF3C3C3C" Opacity="0.6"/>
+            </Label.Background>
+        </Label>
         <Button Height="100" VerticalAlignment="Top" HorizontalAlignment="Right" Width="100" Click="Button_Click" BorderBrush="{x:Null}" Margin="0,-40,-40,0">
             <Button.Style>
                 <Style TargetType="{x:Type Button}">
@@ -44,5 +50,10 @@
                 </Image.OpacityMask>
             </Image>
         </Button>
+        <Label x:Name="labelCount" Content="0 / 0" Height="30" VerticalAlignment="Bottom" VerticalContentAlignment="Center" Margin="0" Foreground="#FFF7F7F7" HorizontalAlignment="Right" Width="100" HorizontalContentAlignment="Right">
+            <Label.Background>
+                <SolidColorBrush Color="#FF3C3C3C" Opacity="0.6"/>
+            </Label.Background>
+        </Label>
     </Grid>
 </Window>

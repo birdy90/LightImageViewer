@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Diagnostics;
 using System.IO;
-using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace LightImageViewer
 {
@@ -57,6 +49,9 @@ namespace LightImageViewer
 
         #endregion
 
+
+        #region Методы
+
         /// <summary>
         /// Обработка нажатия на кнопку закрытия окна
         /// </summary>
@@ -64,7 +59,7 @@ namespace LightImageViewer
         /// <param name="e"></param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
         
         /// <summary>
@@ -94,7 +89,7 @@ namespace LightImageViewer
             // передать изображение на отрисовку можно только после того, как все контролы будут отрисованы на экране
             var dict = Environment.GetCommandLineArgs();
             if (dict.Length == 1) return;
-            canvas.CurrentPath = dict[1];
+            LoadImage(dict[1]);
             GetFilesList();
         }
         
@@ -122,6 +117,7 @@ namespace LightImageViewer
             }));
             _recaching = false;
         }
+
 
         #region Масштабирование
 
@@ -197,7 +193,7 @@ namespace LightImageViewer
         }
 
         /// <summary>
-        /// Увелечение масштаба
+        /// Увеличение масштаба
         /// </summary>
         /// <param name="scale"></param>
         /// <returns></returns>
@@ -225,13 +221,25 @@ namespace LightImageViewer
         /// </summary>
         void GetFilesList()
         {
-            var filters = "*.png|*.jpg|*.jpeg|*.gif|*.bmp|*.tif";
+            var vf = new List<string>() { "svg" };
+            var bf = new List<string>() { "png", "bmp", "tif", "tiff", "jpg", "jpeg", "psd", "odd", "ico" };
+            var af = new List<string>() { "gif" };
+
+            var searchPattern = new Regex(
+                string.Format(@"({0}|{1}|{2})$", // webp | ai | pdf | tga
+                string.Join("|", bf), 
+                string.Join("|", vf), 
+                string.Join("|", af)), 
+                RegexOptions.IgnoreCase);
             var path = System.IO.Path.GetDirectoryName(canvas.CurrentPath);
-            _filenames = filters.Split('|')
-                .SelectMany(f => Directory.GetFiles(path, f, SearchOption.TopDirectoryOnly))
-                .ToList();
+            var files = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly);
+            var search = files.Where(f => searchPattern.IsMatch(f));
+            _filenames = search.ToList();
             _currentFileIndex = _filenames.IndexOf(canvas.CurrentPath);
+            
+            labelCount.Content = string.Format("{0} / {1}", _currentFileIndex + 1, _filenames.Count());
         }
+
 
         #region Взаимодействие с пользователем
 
@@ -281,7 +289,7 @@ namespace LightImageViewer
                     Scale(-1, centerPoint);
                     break;
                 case Key.Up:
-                    //величение масштаба
+                    // увеличение масштаба
                     Scale(1, centerPoint);
                     break;
                 case Key.Left:
@@ -289,16 +297,25 @@ namespace LightImageViewer
                     // список файлов получается ещё раз на случай изменения содержимого рабочего папки
                     GetFilesList();
                     if (_currentFileIndex == 0) _currentFileIndex = 1;
-                    canvas.CurrentPath = _filenames[--_currentFileIndex];
+                    LoadImage(_filenames[--_currentFileIndex]);
                     break;
                 case Key.Right:
                     // следующая картинка
                     // список файлов получается ещё раз на случай изменения содержимого рабочего папки
                     GetFilesList();
                     if (_currentFileIndex >= _filenames.Count - 1) _currentFileIndex = _filenames.Count - 2;
-                    canvas.CurrentPath = _filenames[++_currentFileIndex];
+                    LoadImage(_filenames[++_currentFileIndex]);
                     break;
             }
+        }
+
+        #endregion
+
+        public void LoadImage(string filename)
+        {
+            labelName.Content = filename;
+            labelCount.Content = string.Format("{0} / {1}", _currentFileIndex + 1, _filenames.Count());
+            canvas.CurrentPath = filename;
         }
 
         #endregion
