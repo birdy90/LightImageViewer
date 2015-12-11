@@ -7,6 +7,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.IO;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
+using System.Diagnostics;
+using System.Threading;
 
 namespace LightImageViewer
 {
@@ -52,6 +55,11 @@ namespace LightImageViewer
 
         #region Методы
 
+        public void CloseApplication()
+        {
+            Close();
+        }
+
         /// <summary>
         /// Обработка нажатия на кнопку закрытия окна
         /// </summary>
@@ -59,9 +67,9 @@ namespace LightImageViewer
         /// <param name="e"></param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Close();
+            CloseApplication();
         }
-        
+
         /// <summary>
         /// Обработка загрузки главного окна приложения
         /// </summary>
@@ -92,7 +100,7 @@ namespace LightImageViewer
             LoadImage(dict[1]);
             GetFilesList();
         }
-        
+
         /// <summary>
         /// Методы запускающийся в отдельном потоке и используемый для того, чтобы перекэшировать отображаемое изображение,
         /// но сделать это не сразу, а с небольшой паузой. Таким образом, например при вращении колеса мыши 
@@ -227,16 +235,16 @@ namespace LightImageViewer
 
             var searchPattern = new Regex(
                 string.Format(@"({0}|{1}|{2})$", // webp | ai | pdf | tga
-                string.Join("|", bf), 
-                string.Join("|", vf), 
-                string.Join("|", af)), 
+                string.Join("|", bf),
+                string.Join("|", vf),
+                string.Join("|", af)),
                 RegexOptions.IgnoreCase);
             var path = System.IO.Path.GetDirectoryName(canvas.CurrentPath);
             var files = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly);
             var search = files.Where(f => searchPattern.IsMatch(f));
             _filenames = search.ToList();
             _currentFileIndex = _filenames.IndexOf(canvas.CurrentPath);
-            
+
             labelCount.Content = string.Format("{0} / {1}", _currentFileIndex + 1, _filenames.Count());
         }
 
@@ -247,7 +255,7 @@ namespace LightImageViewer
         {
             Scale(e.Delta, e.GetPosition(canvas));
         }
-        
+
         private void imageField_MouseUp(object sender, MouseButtonEventArgs e)
         {
             _panning = false;
@@ -284,6 +292,9 @@ namespace LightImageViewer
             var centerPoint = new Point(canvas.ImgLeft + canvas.CurrentImage.Width / 2d, canvas.ImgTop + canvas.CurrentImage.Height / 2d);
             switch (e.Key)
             {
+                case Key.Escape:
+                    CloseApplication();
+                    break;
                 case Key.Down:
                     // уменьшение масштаба
                     Scale(-1, centerPoint);
@@ -306,6 +317,35 @@ namespace LightImageViewer
                     if (_currentFileIndex >= _filenames.Count - 1) _currentFileIndex = _filenames.Count - 2;
                     LoadImage(_filenames[++_currentFileIndex]);
                     break;
+                case Key.P:
+                    var psPath = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\photoshop.exe\", "", null);
+                    if (psPath != null)
+                        Process.Start(psPath, _filenames[_currentFileIndex]);
+                    break;
+                case Key.Delete:
+                    var result1 = MessageBox.Show("Delete file?", "Important Question", MessageBoxButton.YesNo);
+                    if (result1 == MessageBoxResult.Yes)
+                    {
+                        var fileToDelete = _filenames[_currentFileIndex];
+                        canvas.CurrentImage = null;
+                        _filenames.RemoveAt(_currentFileIndex);
+                        if (_currentFileIndex == _filenames.Count)
+                            _currentFileIndex--;
+                        if (_currentFileIndex < 0)
+                        {
+                            CloseApplication();
+                            return;
+                        }
+                        else
+                        {
+                            canvas.CurrentPath = _filenames[_currentFileIndex];
+                            LoadImage(canvas.CurrentPath);
+                        }
+                        while (!IsFileReady(fileToDelete))
+                            Thread.Sleep(50);
+                        File.Delete(fileToDelete);
+                    }
+                    break;
             }
         }
 
@@ -316,6 +356,21 @@ namespace LightImageViewer
             labelName.Content = filename;
             labelCount.Content = string.Format("{0} / {1}", _currentFileIndex + 1, _filenames.Count());
             canvas.CurrentPath = filename;
+        }
+
+        public static bool IsFileReady(string sFilename)
+        {
+            // If the file can be opened for exclusive access it means that the file
+            // is no longer locked by another process.
+            try
+            {
+                using (FileStream inputStream = File.Open(sFilename, FileMode.Open, FileAccess.Read, FileShare.None))
+                    if (inputStream.Length > 0)
+                        return true;
+                    else
+                        return false;
+            }
+            catch (Exception) { return false; }
         }
 
         #endregion

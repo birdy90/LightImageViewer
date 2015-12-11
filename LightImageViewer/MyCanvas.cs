@@ -171,7 +171,7 @@ namespace LightImageViewer
                 case "gif":
                     bmp = new BitmapImage();
                     bmp.BeginInit();
-                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.CacheOption = BitmapCacheOption.None;
                     bmp.UriSource = _uri;
                     bmp.EndInit();
                     ImageBehavior.SetAnimatedSource(Img, bmp);
