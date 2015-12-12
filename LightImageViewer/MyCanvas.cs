@@ -133,23 +133,36 @@ namespace LightImageViewer
                     svg.Height = h;
                     return svg.Draw().ToBitmapImage();
                 case "gif":
-                    return null;
+                    {
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = BitmapCacheOption.None;
+                        if (_widthBigger)
+                            bmp.DecodePixelWidth = Math.Min(width, _bmpWidth);
+                        else
+                            bmp.DecodePixelHeight = Math.Min(height, _bmpHeight);
+                        bmp.UriSource = _uri;
+                        bmp.EndInit();
+                        return bmp;
+                    }
                 default:
-                    var bmp = new BitmapImage();
-                    bmp.BeginInit();
-                    bmp.CacheOption = BitmapCacheOption.None;
-                    // уловие, в зависимости от того, горизонтальное изображение или вертикальное,
-                    // указывает битмапу, каков требуемый размер изображения в пикселях. Задаётся только
-                    // одно измерение, второе будет сформировано автоматически в соответствии
-                    // с соотношением сторон изображения. "Загружаемый размер" не должен превышать
-                    // настоящий размер изображения
-                    if (_widthBigger)
-                        bmp.DecodePixelWidth = Math.Min(width, _bmpWidth);
-                    else
-                        bmp.DecodePixelHeight = Math.Min(height, _bmpHeight);
-                    bmp.UriSource = _uri;
-                    bmp.EndInit();
-                    return bmp;
+                    {
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = BitmapCacheOption.None;
+                        // уловие, в зависимости от того, горизонтальное изображение или вертикальное,
+                        // указывает битмапу, каков требуемый размер изображения в пикселях. Задаётся только
+                        // одно измерение, второе будет сформировано автоматически в соответствии
+                        // с соотношением сторон изображения. "Загружаемый размер" не должен превышать
+                        // настоящий размер изображения
+                        if (_widthBigger)
+                            bmp.DecodePixelWidth = Math.Min(width, _bmpWidth);
+                        else
+                            bmp.DecodePixelHeight = Math.Min(height, _bmpHeight);
+                        bmp.UriSource = _uri;
+                        bmp.EndInit();
+                        return bmp;
+                    }
             }
         }
 
