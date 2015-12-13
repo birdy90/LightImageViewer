@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Threading;
+using LightImageViewer.Helpers;
 using Microsoft.Win32;
 using System.Diagnostics;
-using System.Threading;
 
 namespace LightImageViewer
 {
@@ -18,15 +16,6 @@ namespace LightImageViewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        /// <summary>
-        /// Список файлов в текущей директории
-        /// </summary>
-        private List<string> _filenames = new List<string>();
-
-        /// <summary>
-        /// Индекс картинки, отображаемой в данный момент
-        /// </summary>
-        private int _currentFileIndex = 0;
 
         private int _timeToWait;
         private int _timeToWaitPreset = 350;
@@ -52,6 +41,7 @@ namespace LightImageViewer
         public MainWindow()
         {
             InitializeComponent();
+            FileList.PathChanged += ImageUpdated;
         }
 
         #endregion
@@ -101,8 +91,7 @@ namespace LightImageViewer
             // передать изображение на отрисовку можно только после того, как все контролы будут отрисованы на экране
             var dict = Environment.GetCommandLineArgs();
             if (dict.Length == 1) return;
-            LoadImage(dict[1]);
-            GetFilesList();
+            FileList.CurrentPath = dict[1];
         }
 
         /// <summary>
@@ -113,6 +102,7 @@ namespace LightImageViewer
         /// </summary>
         public void WaitToRecache()
         {
+            if (_recaching) return;
             _recaching = true;
             while (_timeToWait > 0)
             {
@@ -122,9 +112,9 @@ namespace LightImageViewer
             Application.Current.Dispatcher.BeginInvoke((Action)(() =>
             {
                 if (canvas.Img != null)
-                    canvas.UpdateImageSource();
+                    canvas.RedrawImage();
+                _recaching = false;
             }));
-            _recaching = false;
         }
 
 
@@ -212,49 +202,14 @@ namespace LightImageViewer
         }
 
         #endregion
-
-        /// <summary>
-        /// Функция проверяет, вытянуто изображение вертикально, или горизонтально (при равенстве считаем изображение вертикальным)
-        /// </summary>
-        /// <param name="w">Ширина изображения</param>
-        /// <param name="h">Высота изображения</param>
-        /// <returns>Если истина, то изображение горизонтальное, если ложь - вертикальное</returns>
-        public bool CompareSides(double w, double h)
-        {
-            var ar = Width / Height;
-            return w > h * ar;
-        }
-
-        /// <summary>
-        /// Загружаем список файлов (с которыми работает программа) из текущей директории
-        /// </summary>
-        void GetFilesList()
-        {
-            var vf = new List<string>() { "svg" };
-            var bf = new List<string>() { "png", "bmp", "tif", "tiff", "jpg", "jpeg", "psd", "odd", "ico" };
-            var af = new List<string>() { "gif" };
-
-            var searchPattern = new Regex(
-                string.Format(@"({0}|{1}|{2})$", // webp | ai | pdf | tga
-                string.Join("|", bf),
-                string.Join("|", vf),
-                string.Join("|", af)),
-                RegexOptions.IgnoreCase);
-            var path = System.IO.Path.GetDirectoryName(canvas.CurrentPath);
-            var files = Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly);
-            var search = files.Where(f => searchPattern.IsMatch(f));
-            _filenames = search.ToList();
-            _currentFileIndex = _filenames.IndexOf(canvas.CurrentPath);
-
-            labelCount.Content = string.Format("{0} / {1}", _currentFileIndex + 1, _filenames.Count());
-        }
-
+        
 
         #region Взаимодействие с пользователем
 
         private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             Scale(e.Delta, e.GetPosition(canvas));
+            OnImageChanged();
         }
 
         private void imageField_MouseUp(object sender, MouseButtonEventArgs e)
@@ -301,61 +256,79 @@ namespace LightImageViewer
                     case Key.Down:
                         // уменьшение масштаба
                         Scale(-1, centerPoint);
+                        OnImageChanged();
                         break;
                     case Key.Up:
                         // увеличение масштаба
                         Scale(1, centerPoint);
+                        OnImageChanged();
                         break;
                     case Key.Left:
-                        GetFilesList();
-                        if (_currentFileIndex == 0) _currentFileIndex = 1;
-                        LoadImage(_filenames[--_currentFileIndex]);
+                        FileList.RealoadFilesList();
+                        if (FileList.Count == 0)
+                        {
+                            CloseApplication();
+                            return;
+                        }
+                        if (FileList.CurrentFileIndex > 0)
+                            FileList.CurrentFileIndex--;
+                        else
+                            FileList.CurrentFileIndex = 0;
                         break;
                     case Key.Right:
-                        GetFilesList();
-                        if (_currentFileIndex >= _filenames.Count - 1) _currentFileIndex = _filenames.Count - 2;
-                        LoadImage(_filenames[++_currentFileIndex]);
+                        FileList.RealoadFilesList();
+                        var count = FileList.Count;
+                        if (count == 0)
+                        {
+                            CloseApplication();
+                            return;
+                        }
+                        if (FileList.CurrentFileIndex < count - 1)
+                            FileList.CurrentFileIndex++;
+                        else
+                            FileList.CurrentFileIndex = count - 1;
                         break;
                     case Key.P:
                         var psPath = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\photoshop.exe\", "", null);
                         if (psPath != null)
-                            Process.Start(psPath, _filenames[_currentFileIndex]);
+                            Process.Start(psPath, FileList.CurrentPath);
                         break;
                     case Key.Delete:
                         var result1 = MessageBox.Show("Delete file?", "Important Question", MessageBoxButton.YesNo);
                         if (result1 == MessageBoxResult.No) return;
 
-                        var _oldIndex = _currentFileIndex;
-                        while (!IsFileReady(_filenames[_currentFileIndex]))
-                            Thread.Sleep(50);
-                        File.Delete(_filenames[_currentFileIndex]);
-                        _filenames.RemoveAt(_currentFileIndex);
-                        GetFilesList();
-                        _currentFileIndex = _oldIndex;
+                        if (File.Exists(FileList.CurrentPath))
+                        {
+                            while (!IsFileReady(FileList.CurrentPath))
+                                Thread.Sleep(50);
+                            File.Delete(FileList.CurrentPath);
+                        }
+                        var _oldIndex = FileList.CurrentFileIndex;
+                        FileList.RealoadFilesList();
                         canvas.Clear();
-                        if (_currentFileIndex == _filenames.Count)
-                            _currentFileIndex--;
-                        if (_currentFileIndex < 0)
+                        if (_oldIndex == FileList.Count)
+                            _oldIndex = FileList.Count - 1;
+                        if (_oldIndex < 0)
                         {
                             CloseApplication();
                             return;
                         }
                         else
                         {
-                            canvas.CurrentPath = _filenames[_currentFileIndex];
-                            LoadImage(canvas.CurrentPath);
+                            FileList.CurrentFileIndex = _oldIndex;
                         }
                         break;
-            }
+                }
         }
 
         #endregion
 
-        public void LoadImage(string filename)
+
+        public void ImageUpdated()
         {
-            labelName.Content = filename;
-            labelCount.Content = string.Format("{0} / {1}", _currentFileIndex + 1, _filenames.Count());
-            canvas.CurrentPath = filename;
+            FileList.RealoadFilesList();
+            labelName.Content = FileList.CurrentPath;
+            labelCount.Content = string.Format("{0} / {1}", FileList.CurrentFileIndex + 1, FileList.Count);
         }
 
         public static bool IsFileReady(string sFilename)
@@ -374,5 +347,12 @@ namespace LightImageViewer
         }
 
         #endregion
+
+        public event EventDelegates.MethodContainer ImageChanged;
+
+        public void OnImageChanged()
+        {
+            if (ImageChanged != null) ImageChanged();
+        }
     }
 }
