@@ -31,7 +31,6 @@ namespace LightImageViewer
             Img = new Image();
             Children.Add(Img);
             Img.Stretch = Stretch.Fill;
-            CurrentImage = Img;
         }
 
         /// <summary>
@@ -52,7 +51,6 @@ namespace LightImageViewer
                 if (string.Equals(_currentPath, value)) return;
                 
                 _currentPath = value;
-                GetUri();
                 ImageBehavior.SetAnimatedSource(Img, null);
 
                 GetBmpParameters();
@@ -75,15 +73,10 @@ namespace LightImageViewer
                     ImgLeft = ActualWidth / 2d - Img.Width / 2d;
                 }
                 UpdateImageSource();
-                InvalidateVisual();
                 GC.Collect();
             }
         }
 
-        /// <summary>
-        /// Текущий отрисовываемый объект Image
-        /// </summary>
-        public Image CurrentImage { get; set; }
 
         /// <summary>
         /// Горизонтальное положение изображения
@@ -95,17 +88,23 @@ namespace LightImageViewer
         /// </summary>
         public double ImgTop { get; set; }
 
+        /// <summary>
+        /// Текущий отрисовываемый объект Image
+        /// </summary>
         public Image Img
         {
-            get
-            {
-                return _img;
-            }
+            get { return _img; }
+            set { _img = value; }
+        }
 
-            set
-            {
-                _img = value;
-            }
+        /// <summary>
+        /// Очистка текущего состояния холста
+        /// </summary>
+        public void Clear()
+        {
+            Img.Source = null;
+            ImageBehavior.SetAnimatedSource(Img, null);
+            GC.Collect();
         }
 
         /// <summary>
@@ -118,25 +117,32 @@ namespace LightImageViewer
         /// <returns></returns>
         public BitmapImage PrecacheBmp(int width, int height)
         {
-            GetUri();
             switch (_uri.Segments.Last().Split('.').Last())
             {
                 case "svg":
                     var svg = Svg.SvgDocument.Open(_uri.LocalPath);
-                    InvalidateVisual();
                     var wScale = width / svg.Width;
                     var hScale = height / svg.Height;
-                    //svg.Transforms.Add(new Svg.Transforms.SvgScale(1/wScale, 1/hScale));
                     var w = svg.Width * wScale;
                     var h = svg.Height * hScale;
-                    svg.Width = w;
-                    svg.Height = h;
+                    if (svg.X.Type == Svg.SvgUnitType.Pixel)
+                    {
+                        svg.Width = w;
+                        svg.Height = h;
+                    }
+                    else
+                    {
+                        //svg.Transforms.Add(new Svg.Transforms.SvgScale(1 / wScale));
+                        //svg.Width = w;
+                        //svg.Height = h;
+                        //svg.ViewBox = new Svg.SvgViewBox(0, 0, w, h);
+                    }
                     return svg.Draw().ToBitmapImage();
                 case "gif":
                     {
                         var bmp = new BitmapImage();
                         bmp.BeginInit();
-                        bmp.CacheOption = BitmapCacheOption.None;
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;
                         if (_widthBigger)
                             bmp.DecodePixelWidth = Math.Min(width, _bmpWidth);
                         else
@@ -149,7 +155,7 @@ namespace LightImageViewer
                     {
                         var bmp = new BitmapImage();
                         bmp.BeginInit();
-                        bmp.CacheOption = BitmapCacheOption.None;
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;
                         // уловие, в зависимости от того, горизонтальное изображение или вертикальное,
                         // указывает битмапу, каков требуемый размер изображения в пикселях. Задаётся только
                         // одно измерение, второе будет сформировано автоматически в соответствии
@@ -173,7 +179,6 @@ namespace LightImageViewer
         private void GetBmpParameters()
         {
             GetUri();
-
             BitmapImage bmp = null;
             switch (_uri.Segments.Last().Split('.').Last())
             {
@@ -184,7 +189,7 @@ namespace LightImageViewer
                 case "gif":
                     bmp = new BitmapImage();
                     bmp.BeginInit();
-                    bmp.CacheOption = BitmapCacheOption.None;
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
                     bmp.UriSource = _uri;
                     bmp.EndInit();
                     ImageBehavior.SetAnimatedSource(Img, bmp);
@@ -192,7 +197,7 @@ namespace LightImageViewer
                 default:
                     bmp = new BitmapImage();
                     bmp.BeginInit();
-                    bmp.CacheOption = BitmapCacheOption.None;
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
                     bmp.UriSource = _uri;
                     bmp.EndInit();
                     break;
@@ -227,14 +232,15 @@ namespace LightImageViewer
         {
             GetUri();
             Img.Source = PrecacheBmp((int)Img.Width, (int)Img.Height);
+            InvalidateVisual();
         }
         
         protected override void OnRender(DrawingContext dc)
         {
-            if (CurrentImage == null) return;
+            if (Img == null) return;
 
-            SetTop(CurrentImage, ImgTop);
-            SetLeft(CurrentImage, ImgLeft);
+            SetTop(Img, ImgTop);
+            SetLeft(Img, ImgLeft);
         }
     }
 }

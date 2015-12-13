@@ -40,6 +40,10 @@ namespace LightImageViewer
         private bool _panning = false;
         private Point _lastPoint;
 
+        private bool ShiftPressed { get { return (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)); } }
+        private bool CtrlPressed { get { return (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)); } }
+        private bool AltPressed { get { return (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt)); } }
+
         #region Конструкторы
 
         /// <summary>
@@ -113,15 +117,12 @@ namespace LightImageViewer
             while (_timeToWait > 0)
             {
                 _timeToWait -= _timeToWaitStep;
-                System.Threading.Thread.Sleep(_timeToWaitStep);
+                Thread.Sleep(_timeToWaitStep);
             }
             Application.Current.Dispatcher.BeginInvoke((Action)(() =>
             {
-                if (canvas.CurrentImage != null)
-                {
-                    //canvas.CurrentImage.Source = canvas.PrecacheBmp((int)canvas.CurrentImage.Width, (int)canvas.CurrentImage.Height);
+                if (canvas.Img != null)
                     canvas.UpdateImageSource();
-                }
             }));
             _recaching = false;
         }
@@ -140,8 +141,8 @@ namespace LightImageViewer
             // контролируем, было ли изменено изображение. если нет, то рекэширование не трежуется
             bool resized = false;
 
-            var oldWidth = (int)canvas.CurrentImage.Width;
-            var oldHeight = (int)canvas.CurrentImage.Height;
+            var oldWidth = (int)canvas.Img.Width;
+            var oldHeight = (int)canvas.Img.Height;
             var width = 0;
             var height = 0;
             var checkWidth = oldWidth > oldHeight;
@@ -157,11 +158,11 @@ namespace LightImageViewer
             else
             {
                 if (checkWidth ?
-                    oldWidth < _maxSizeMultiplier * canvas.CurrentImage.Width :
-                    oldHeight < _maxSizeMultiplier * canvas.CurrentImage.Height)
+                    oldWidth < _maxSizeMultiplier * canvas.Img.Width :
+                    oldHeight < _maxSizeMultiplier * canvas.Img.Height)
                 {
-                    width = (int)Math.Min(IncreaseSize(oldWidth), _maxSizeMultiplier * canvas.CurrentImage.Width);
-                    height = (int)Math.Min(IncreaseSize(oldHeight), _maxSizeMultiplier * canvas.CurrentImage.Height);
+                    width = (int)Math.Min(IncreaseSize(oldWidth), _maxSizeMultiplier * canvas.Img.Width);
+                    height = (int)Math.Min(IncreaseSize(oldHeight), _maxSizeMultiplier * canvas.Img.Height);
                     resized = true;
                 }
             }
@@ -173,8 +174,8 @@ namespace LightImageViewer
             _timeToWait = _timeToWaitPreset;
 
             // задаём новые размеры изображения
-            canvas.CurrentImage.Width = width;
-            canvas.CurrentImage.Height = height;
+            canvas.Img.Width = width;
+            canvas.Img.Height = height;
 
             // если кэширование не начато, то запустить поток с ожиданием
             if (!_recaching) Task.Factory.StartNew(WaitToRecache);
@@ -287,48 +288,51 @@ namespace LightImageViewer
 
         private void MyWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            if (canvas.CurrentImage == null) return;
+            if (canvas.Img == null) return;
 
-            var centerPoint = new Point(canvas.ImgLeft + canvas.CurrentImage.Width / 2d, canvas.ImgTop + canvas.CurrentImage.Height / 2d);
-            switch (e.Key)
-            {
-                case Key.Escape:
-                    CloseApplication();
-                    break;
-                case Key.Down:
-                    // уменьшение масштаба
-                    Scale(-1, centerPoint);
-                    break;
-                case Key.Up:
-                    // увеличение масштаба
-                    Scale(1, centerPoint);
-                    break;
-                case Key.Left:
-                    // предыдущая картинка
-                    // список файлов получается ещё раз на случай изменения содержимого рабочего папки
-                    GetFilesList();
-                    if (_currentFileIndex == 0) _currentFileIndex = 1;
-                    LoadImage(_filenames[--_currentFileIndex]);
-                    break;
-                case Key.Right:
-                    // следующая картинка
-                    // список файлов получается ещё раз на случай изменения содержимого рабочего папки
-                    GetFilesList();
-                    if (_currentFileIndex >= _filenames.Count - 1) _currentFileIndex = _filenames.Count - 2;
-                    LoadImage(_filenames[++_currentFileIndex]);
-                    break;
-                case Key.P:
-                    var psPath = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\photoshop.exe\", "", null);
-                    if (psPath != null)
-                        Process.Start(psPath, _filenames[_currentFileIndex]);
-                    break;
-                case Key.Delete:
-                    var result1 = MessageBox.Show("Delete file?", "Important Question", MessageBoxButton.YesNo);
-                    if (result1 == MessageBoxResult.Yes)
-                    {
-                        var fileToDelete = _filenames[_currentFileIndex];
-                        canvas.CurrentImage = null;
+            var centerPoint = new Point(canvas.ImgLeft + canvas.Img.Width / 2d, canvas.ImgTop + canvas.Img.Height / 2d);
+
+            if (!ShiftPressed && !CtrlPressed && !AltPressed)
+                switch (e.Key)
+                {
+                    case Key.Escape:
+                        CloseApplication();
+                        break;
+                    case Key.Down:
+                        // уменьшение масштаба
+                        Scale(-1, centerPoint);
+                        break;
+                    case Key.Up:
+                        // увеличение масштаба
+                        Scale(1, centerPoint);
+                        break;
+                    case Key.Left:
+                        GetFilesList();
+                        if (_currentFileIndex == 0) _currentFileIndex = 1;
+                        LoadImage(_filenames[--_currentFileIndex]);
+                        break;
+                    case Key.Right:
+                        GetFilesList();
+                        if (_currentFileIndex >= _filenames.Count - 1) _currentFileIndex = _filenames.Count - 2;
+                        LoadImage(_filenames[++_currentFileIndex]);
+                        break;
+                    case Key.P:
+                        var psPath = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\photoshop.exe\", "", null);
+                        if (psPath != null)
+                            Process.Start(psPath, _filenames[_currentFileIndex]);
+                        break;
+                    case Key.Delete:
+                        var result1 = MessageBox.Show("Delete file?", "Important Question", MessageBoxButton.YesNo);
+                        if (result1 == MessageBoxResult.No) return;
+
+                        var _oldIndex = _currentFileIndex;
+                        while (!IsFileReady(_filenames[_currentFileIndex]))
+                            Thread.Sleep(50);
+                        File.Delete(_filenames[_currentFileIndex]);
                         _filenames.RemoveAt(_currentFileIndex);
+                        GetFilesList();
+                        _currentFileIndex = _oldIndex;
+                        canvas.Clear();
                         if (_currentFileIndex == _filenames.Count)
                             _currentFileIndex--;
                         if (_currentFileIndex < 0)
@@ -341,11 +345,7 @@ namespace LightImageViewer
                             canvas.CurrentPath = _filenames[_currentFileIndex];
                             LoadImage(canvas.CurrentPath);
                         }
-                        while (!IsFileReady(fileToDelete))
-                            Thread.Sleep(50);
-                        File.Delete(fileToDelete);
-                    }
-                    break;
+                        break;
             }
         }
 
