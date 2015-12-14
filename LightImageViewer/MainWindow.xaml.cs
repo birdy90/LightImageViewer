@@ -208,8 +208,26 @@ namespace LightImageViewer
 
         private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            Scale(e.Delta, e.GetPosition(canvas));
-            OnImageChanged();
+            if (!ShiftPressed && !CtrlPressed && !AltPressed)
+            {
+                Scale(e.Delta, e.GetPosition(canvas));
+                OnImageChanged();
+            }
+            if (CtrlPressed)
+            {
+                var scrollSize = 40;
+                var center = new Point(ActualWidth / 2d, 0);
+                while (canvas.Img.Width < ActualWidth * 2 / 5)
+                {
+                    canvas.ImgLeft = center.X - canvas.Img.Width / 2d;
+                    canvas.ImgTop = 0;
+                    Scale(1, center);
+                }
+                if (canvas.ImgTop == 0)
+                    canvas.ImgTop = scrollSize * 1.5;
+                canvas.ImgTop += scrollSize * Math.Sign(e.Delta);
+                canvas.InvalidateVisual();
+            }
         }
 
         private void imageField_MouseUp(object sender, MouseButtonEventArgs e)
