@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using WpfAnimatedGif;
 using LightImageViewer.FileFormats;
+using System.Windows.Media.Imaging;
 
 namespace LightImageViewer
 {
@@ -45,8 +46,11 @@ namespace LightImageViewer
         /// </summary>
         public void Clear()
         {
-            Img.Source = null;
-            ImageBehavior.SetAnimatedSource(Img, null);
+            if (Img != null)
+                ImageBehavior.SetAnimatedSource(Img, null);
+            Children.Clear();
+            Img = new Image();
+            Children.Add(Img);
             GC.Collect();
         }
         
@@ -60,8 +64,9 @@ namespace LightImageViewer
 
         public void DrawImage()
         {
-            try {
-                ImageBehavior.SetAnimatedSource(Img, null);
+            try
+            {
+                Clear();
                 switch (FileList.CurrentFileExtension)
                 {
                     case "svg":
@@ -80,7 +85,7 @@ namespace LightImageViewer
                 _bmp.GetImageParameters();
                 RedrawImage();
             }
-            catch
+            catch (Exception e)
             {
                 OnLoadingFailed();
             }

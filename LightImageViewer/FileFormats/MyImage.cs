@@ -1,6 +1,7 @@
 ﻿using LightImageViewer.Helpers;
 using System;
 using System.Windows.Media.Imaging;
+using WpfAnimatedGif;
 
 namespace LightImageViewer.FileFormats
 {
@@ -43,7 +44,7 @@ namespace LightImageViewer.FileFormats
         {
             var bmp = new BitmapImage();
             bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.CacheOption = BitmapCacheOption.None;
             bmp.UriSource = FileList.Uri;
             bmp.EndInit();
             CalculateParameters(bmp);

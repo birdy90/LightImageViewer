@@ -1,6 +1,7 @@
 ﻿using LightImageViewer.Helpers;
 using System.Windows.Media.Imaging;
 using Svg;
+using System;
 
 namespace LightImageViewer.FileFormats
 {
@@ -10,33 +11,51 @@ namespace LightImageViewer.FileFormats
             :base(canvas)
         { }
 
+        private SvgDocument _svg;
+
         public override BitmapImage Precache(int width, int height)
         {
-            var svg = SvgDocument.Open(FileList.Uri.LocalPath);
-            var wScale = width / svg.Width;
-            var hScale = height / svg.Height;
-            var w = svg.Width * wScale;
-            var h = svg.Height * hScale;
-            if (svg.X.Type == SvgUnitType.Pixel)
+            if (_svg.Width.Type != SvgUnitType.User)
             {
-                svg.Width = w;
-                svg.Height = h;
+                _svg.Width = new SvgUnit(SvgUnitType.Pixel, width);
+                _svg.Height = new SvgUnit(SvgUnitType.Pixel, height);
             }
-            else
-            {
-                //svg.Transforms.Add(new Svg.Transforms.SvgScale(1 / wScale));
-                //svg.Width = w;
-                //svg.Height = h;
-                //svg.ViewBox = new Svg.SvgViewBox(0, 0, w, h);
-            }
-            return svg.Draw().ToBitmapImage();
+            return _svg.Draw().ToBitmapImage();
         }
 
         public override void GetImageParameters()
         {
-            var svg = SvgDocument.Open(FileList.Uri.LocalPath);
-            var bmp = svg.Draw().ToBitmapImage();
-            CalculateParameters(bmp);
+            _svg = SvgDocument.Open(FileList.Uri.LocalPath);
+
+            ImageParameters.BmpHeight = (int)(float)_svg.Height;
+            ImageParameters.BmpWidth = (int)(float)_svg.Width;
+            if (ImageParameters.BmpHeight > _canvas.ActualHeight)
+                ImageParameters.Hcount = (int)Math.Ceiling(ImageParameters.BmpHeight / _canvas.ActualHeight);
+            if (ImageParameters.BmpWidth > _canvas.ActualWidth)
+                ImageParameters.Wcount = (int)Math.Ceiling(ImageParameters.BmpWidth / _canvas.ActualWidth);
+            ImageParameters.Aspect = (double)ImageParameters.BmpWidth / ImageParameters.BmpHeight;
+
+            ImageParameters.WidthBigger = false;
+            if (_canvas.ActualWidth / _canvas.ActualHeight < ImageParameters.Aspect)
+                ImageParameters.WidthBigger = true;
+
+            var usedSize = 0d;
+            if (ImageParameters.WidthBigger)
+            {
+                usedSize = Math.Min(_canvas.ActualWidth, ImageParameters.BmpWidth);
+                _canvas.Img.Width = usedSize;
+                _canvas.Img.Height = usedSize / ImageParameters.Aspect;
+                _canvas.ImgTop = _canvas.ActualHeight / 2d - _canvas.Img.Height / 2d;
+                _canvas.ImgLeft = _canvas.ActualWidth / 2d - usedSize / 2d;
+            }
+            else
+            {
+                usedSize = Math.Min(_canvas.ActualHeight, ImageParameters.BmpHeight);
+                _canvas.Img.Height = usedSize;
+                _canvas.Img.Width = usedSize * ImageParameters.Aspect;
+                _canvas.ImgTop = _canvas.ActualHeight / 2d - usedSize / 2d;
+                _canvas.ImgLeft = _canvas.ActualWidth / 2d - _canvas.Img.Width / 2d;
+            }
         }
     }
 }

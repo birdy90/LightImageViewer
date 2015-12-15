@@ -1,5 +1,4 @@
 ﻿using LightImageViewer.Helpers;
-using System;
 using System.Windows.Media.Imaging;
 using WpfAnimatedGif;
 
@@ -11,29 +10,22 @@ namespace LightImageViewer.FileFormats
             :base(canvas)
         { }
 
+        BitmapImage _bmp;
+
         public override BitmapImage Precache(int width, int height)
         {
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.OnLoad;
-            if (ImageParameters.WidthBigger)
-                bmp.DecodePixelWidth = Math.Min(width, ImageParameters.BmpWidth);
-            else
-                bmp.DecodePixelHeight = Math.Min(height, ImageParameters.BmpHeight);
-            bmp.UriSource = FileList.Uri;
-            bmp.EndInit();
-            return bmp;
+            return _bmp;
         }
 
         public override void GetImageParameters()
         {
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.OnLoad;
-            bmp.UriSource = FileList.Uri;
-            bmp.EndInit();
-            ImageBehavior.SetAnimatedSource(_canvas.Img, bmp);
-            CalculateParameters(bmp);
+            _bmp = new BitmapImage();
+            _bmp.BeginInit();
+            _bmp.CacheOption = BitmapCacheOption.OnLoad;
+            _bmp.UriSource = FileList.Uri;
+            _bmp.EndInit();
+            CalculateParameters(_bmp);
+            ImageBehavior.SetAnimatedSource(_canvas.Img, _bmp);
         }
     }
 }

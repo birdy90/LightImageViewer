@@ -33,6 +33,7 @@ namespace LightImageViewer.Helpers
                 }
                 else
                 {
+                    _currentDirectory = Path.GetDirectoryName(value);
                     LoadStubImage();
                 }
             }
@@ -76,6 +77,35 @@ namespace LightImageViewer.Helpers
             var search = files.Where(f => searchPattern.IsMatch(f));
             _filenames = search.ToList();
             _currentFileIndex = _filenames.IndexOf(_currentPath);
+        }
+
+        public static bool GetPreviousImage()
+        {
+            RealoadFilesList();
+            if (Count == 0)
+                return false;
+
+            if (CurrentFileIndex > 0)
+                CurrentFileIndex--;
+            else
+                if (CurrentFileIndex < 0)
+                    CurrentFileIndex = 0;
+            return true;
+        }
+
+        public static bool GetNextImage()
+        {
+            RealoadFilesList();
+            var count = Count;
+            if (Count == 0)
+                return false;
+
+            if (CurrentFileIndex < count - 1)
+                CurrentFileIndex++;
+            else
+                if (CurrentFileIndex > count - 1)
+                    CurrentFileIndex = count - 1;
+            return true;
         }
 
         public static void LoadStubImage()

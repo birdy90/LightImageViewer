@@ -179,6 +179,7 @@ namespace LightImageViewer
             canvas.ImgTop -= a;
 
             canvas.InvalidateVisual();
+            OnImageChanged();
         }
 
         /// <summary>
@@ -246,10 +247,7 @@ namespace LightImageViewer
 
                 canvas.ImgLeft -= diff.X;
                 canvas.ImgTop -= diff.Y;
-                // рекэширование нужно в случае если изображение кропается
-                //canvas.PrecacheBmp((int)canvas.CurrentImage.Width, (int)canvas.CurrentImage.Height);
                 canvas.InvalidateVisual();
-
             }
         }
 
@@ -272,40 +270,19 @@ namespace LightImageViewer
                         CloseApplication();
                         break;
                     case Key.Down:
-                        // уменьшение масштаба
                         Scale(-1, centerPoint);
-                        OnImageChanged();
                         break;
                     case Key.Up:
-                        // увеличение масштаба
                         Scale(1, centerPoint);
-                        OnImageChanged();
                         break;
                     case Key.Left:
-                        FileList.RealoadFilesList();
-                        if (FileList.Count == 0)
-                        {
-                            CloseApplication();
-                            return;
-                        }
-                        if (FileList.CurrentFileIndex > 0)
-                            FileList.CurrentFileIndex--;
-                        else
-                            FileList.CurrentFileIndex = 0;
-                        break;
+                        if (FileList.GetPreviousImage()) break;
+                        CloseApplication();
+                        return;
                     case Key.Right:
-                        FileList.RealoadFilesList();
-                        var count = FileList.Count;
-                        if (count == 0)
-                        {
-                            CloseApplication();
-                            return;
-                        }
-                        if (FileList.CurrentFileIndex < count - 1)
-                            FileList.CurrentFileIndex++;
-                        else
-                            FileList.CurrentFileIndex = count - 1;
-                        break;
+                        if (FileList.GetNextImage()) break;
+                        CloseApplication();
+                        return;
                     case Key.P:
                         var psPath = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\photoshop.exe\", "", null);
                         if (psPath != null)
@@ -314,11 +291,10 @@ namespace LightImageViewer
                     case Key.Delete:
                         var result1 = MessageBox.Show("Delete file?", "Important Question", MessageBoxButton.YesNo);
                         if (result1 == MessageBoxResult.No) return;
-
                         if (File.Exists(FileList.CurrentPath))
                         {
                             while (!IsFileReady(FileList.CurrentPath))
-                                Thread.Sleep(50);
+                                Thread.Sleep(100);
                             File.Delete(FileList.CurrentPath);
                         }
                         var _oldIndex = FileList.CurrentFileIndex;
@@ -326,15 +302,21 @@ namespace LightImageViewer
                         canvas.Clear();
                         if (_oldIndex == FileList.Count)
                             _oldIndex = FileList.Count - 1;
-                        if (_oldIndex < 0)
+                        if (FileList.Count == 0)
                         {
                             CloseApplication();
                             return;
                         }
-                        else
-                        {
-                            FileList.CurrentFileIndex = _oldIndex;
-                        }
+                        FileList.CurrentFileIndex = _oldIndex;
+                        break;
+                }
+            if (CtrlPressed)
+                switch (e.Key)
+                {
+                    case Key.D:
+                        var psPath = "explorer.exe";
+                        if (psPath != null)
+                            Process.Start(psPath, FileList.CurrentDirectory);
                         break;
                 }
         }

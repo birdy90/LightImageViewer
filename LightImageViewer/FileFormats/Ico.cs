@@ -15,10 +15,6 @@ namespace LightImageViewer.FileFormats
             var bmp = new BitmapImage();
             bmp.BeginInit();
             bmp.CacheOption = BitmapCacheOption.OnLoad;
-            // уловие, в зависимости от того, горизонтальное изображение или вертикальное, указывает битмапу, 
-            // каков требуемый размер изображения в пикселях. Задаётся только одно измерение, второе будет 
-            // сформировано автоматически в соответствии с соотношением сторон изображения. "Загружаемый размер" 
-            // не должен превышать настоящий размер изображения
             if (ImageParameters.WidthBigger)
                 bmp.DecodePixelWidth = Math.Min(width, ImageParameters.BmpWidth);
             else
