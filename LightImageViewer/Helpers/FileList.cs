@@ -9,9 +9,11 @@ namespace LightImageViewer.Helpers
     public static class FileList
     {
         private static string _currentPath;
+
         private static string _currentDirectory;
 
         private static Uri _uri;
+
         private static int _currentFileIndex;
 
         /// <summary>
@@ -45,6 +47,7 @@ namespace LightImageViewer.Helpers
             get { return _currentDirectory; }
             set { _currentDirectory = value; }
         }
+
         public static int CurrentFileIndex
         {
             get { return _currentFileIndex; }
@@ -54,6 +57,7 @@ namespace LightImageViewer.Helpers
                 CurrentPath = _filenames[value];
             }
         }
+
         public static Uri Uri { get { return _uri; } }
         public static int Count { get { return _filenames.Count(); } }
         public static string CurrentFileExtension { get { return _uri.Segments.Last().Split('.').Last().ToLower(); } }
@@ -63,16 +67,9 @@ namespace LightImageViewer.Helpers
         /// </summary>
         public static void RealoadFilesList()
         {
-            var vf = new List<string>() { "svg" };
-            var bf = new List<string>() { "png", "bmp", "tif", "tiff", "jpg", "jpeg", "psd", "odd", "ico" };
-            var af = new List<string>() { "gif" };
+            var bf = new List<string>() { "svg", /*"eps", "pdf",*/ "gif", "png", "bmp", "tif", "tiff", "jpg", "jpeg", "psd", "odd", "ico" };
 
-            var searchPattern = new Regex(
-                string.Format(@"({0}|{1}|{2})$", // webp | ai | pdf | tga
-                string.Join("|", bf),
-                string.Join("|", vf),
-                string.Join("|", af)),
-                RegexOptions.IgnoreCase);
+            var searchPattern = new Regex(string.Format(@"({0})$", string.Join("|", bf), RegexOptions.IgnoreCase));
             var files = Directory.EnumerateFiles(CurrentDirectory, "*.*", SearchOption.TopDirectoryOnly);
             var search = files.Where(f => searchPattern.IsMatch(f));
             _filenames = search.ToList();
@@ -114,12 +111,16 @@ namespace LightImageViewer.Helpers
             RealoadFilesList();
             OnPathChanged();
         }
-        
+
+        #region События
+
         public static event EventDelegates.MethodContainer PathChanged;
 
         public static void OnPathChanged()
         {
             if (PathChanged != null) PathChanged();
         }
+
+        #endregion
     }
 }

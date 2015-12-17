@@ -8,6 +8,8 @@ using System.Threading;
 using LightImageViewer.Helpers;
 using Microsoft.Win32;
 using System.Diagnostics;
+using System.Linq;
+using LightImageViewer.FileFormats;
 
 namespace LightImageViewer
 {
@@ -16,12 +18,6 @@ namespace LightImageViewer
     /// </summary>
     public partial class MainWindow : Window
     {
-
-        private int _timeToWait;
-        private int _timeToWaitPreset = 350;
-        private int _timeToWaitStep = 10;
-        private bool _recaching = false;
-
         private int _minSize = 50;
         private int _maxSizeMultiplier = 4;
         private double _scaleFactor = 1.1;
@@ -94,29 +90,6 @@ namespace LightImageViewer
             FileList.CurrentPath = dict[1];
         }
 
-        /// <summary>
-        /// Методы запускающийся в отдельном потоке и используемый для того, чтобы перекэшировать отображаемое изображение,
-        /// но сделать это не сразу, а с небольшой паузой. Таким образом, например при вращении колеса мыши 
-        /// перекэширование будет происходить после того, как пользователь "докрутит до нужного масштаба", а не после
-        /// каждого деления колёсика
-        /// </summary>
-        public void WaitToRecache()
-        {
-            if (_recaching) return;
-            _recaching = true;
-            while (_timeToWait > 0)
-            {
-                _timeToWait -= _timeToWaitStep;
-                Thread.Sleep(_timeToWaitStep);
-            }
-            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
-            {
-                if (canvas.Img != null)
-                    canvas.RedrawImage();
-                _recaching = false;
-            }));
-        }
-
 
         #region Масштабирование
 
@@ -160,15 +133,12 @@ namespace LightImageViewer
             // если изображение не изменилось, то ничего не делаем
             if (!resized) return;
 
-            // обновляем счетчик ожидания рекэширования
-            _timeToWait = _timeToWaitPreset;
 
             // задаём новые размеры изображения
             canvas.Img.Width = width;
             canvas.Img.Height = height;
 
-            // если кэширование не начато, то запустить поток с ожиданием
-            if (!_recaching) Task.Factory.StartNew(WaitToRecache);
+            canvas.Recache();
 
             // сдвигаем изображение так, чтобы мышь осталась в той же точке на картинке (масштабирование 
             // относительно указателя мыши)
@@ -240,7 +210,6 @@ namespace LightImageViewer
         {
             if (_panning)
             {
-                _timeToWait = _timeToWaitPreset;
                 var newPoint = e.GetPosition(this);
                 var diff = _lastPoint - newPoint;
                 _lastPoint = newPoint;
@@ -318,6 +287,18 @@ namespace LightImageViewer
                         if (psPath != null)
                             Process.Start(psPath, FileList.CurrentDirectory);
                         break;
+                    case Key.Left:
+                        if (!(canvas.Bmp is IMultiPages)) return;
+                        (canvas.Bmp as IMultiPages).PreviousPage();
+                        UpdateLabels();
+                        canvas.Recache();
+                        break;
+                    case Key.Right:
+                        if (!(canvas.Bmp is IMultiPages)) return;
+                        (canvas.Bmp as IMultiPages).NextPage();
+                        canvas.Recache();
+                        UpdateLabels();
+                        break;
                 }
         }
 
@@ -327,7 +308,20 @@ namespace LightImageViewer
         public void ImageUpdated()
         {
             FileList.RealoadFilesList();
-            labelName.Content = FileList.CurrentPath;
+            UpdateLabels();
+        }
+
+        public void UpdateLabels()
+        {
+            var pages = "";
+            if (canvas.Bmp is IMultiPages)
+            {
+                var mp = canvas.Bmp as IMultiPages;
+                if (mp.PagesCount > 1)
+                    pages = string.Format(" page {0} from {1}", mp.CurrentPage + 1, mp.PagesCount);
+            }
+            labelName.Content = FileList.CurrentPath.Split('\\').Last() + pages;
+            labelPath.Content = FileList.CurrentPath;
             labelCount.Content = string.Format("{0} / {1}", FileList.CurrentFileIndex + 1, FileList.Count);
         }
 

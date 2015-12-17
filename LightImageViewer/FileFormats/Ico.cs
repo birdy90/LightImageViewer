@@ -31,7 +31,7 @@ namespace LightImageViewer.FileFormats
             bmp.CacheOption = BitmapCacheOption.OnLoad;
             bmp.UriSource = FileList.Uri;
             bmp.EndInit();
-            CalculateParameters(bmp);
+            ImageParameters.CalculateParameters(bmp.PixelWidth, bmp.PixelHeight, _canvas);
         }
     }
 }

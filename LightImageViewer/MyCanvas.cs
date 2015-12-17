@@ -5,6 +5,9 @@ using System.Windows.Media;
 using WpfAnimatedGif;
 using LightImageViewer.FileFormats;
 using System.Windows.Media.Imaging;
+using System.Threading;
+using System.Windows;
+using System.Threading.Tasks;
 
 namespace LightImageViewer
 {
@@ -12,7 +15,12 @@ namespace LightImageViewer
     {
         private Image _img;
         private MyImage _bmp;
-        
+
+        private int _timeToWait;
+        private int _timeToWaitPreset = 350;
+        private int _timeToWaitStep = 10;
+        private bool _recaching = false;
+
         /// <summary>
         /// Горизонтальное положение изображения
         /// </summary>
@@ -30,6 +38,12 @@ namespace LightImageViewer
         {
             get { return _img; }
             set { _img = value; }
+        }
+
+        public MyImage Bmp
+        {
+            get { return _bmp; }
+            set { _bmp = value; }
         }
 
         public MyCanvas()
@@ -69,6 +83,16 @@ namespace LightImageViewer
                 Clear();
                 switch (FileList.CurrentFileExtension)
                 {
+                    //case "pdf":
+                    //    _bmp = new Pdf(this);
+                    //    break;
+                    //case "eps":
+                    //    _bmp = new Eps(this);
+                    //    break;
+                    case "tif":
+                    case "tiff":
+                        _bmp = new Tif(this);
+                        break;
                     case "svg":
                         _bmp = new FileFormats.Svg(this);
                         break;
@@ -83,7 +107,7 @@ namespace LightImageViewer
                         break;
                 }
                 _bmp.GetImageParameters();
-                RedrawImage();
+                Recache(true);
             }
             catch (Exception e)
             {
@@ -91,11 +115,41 @@ namespace LightImageViewer
             }
         }
 
-        public void RedrawImage()
+        public void Recache(bool immediate = false)
         {
-            Img.Source = _bmp.Precache((int)Img.Width, (int)Img.Height);
-            InvalidateVisual();
-            GC.Collect();
+            // обновляем счетчик ожидания рекэширования
+            _timeToWait = _timeToWaitPreset;
+            if (immediate)
+                _timeToWait = 0;
+            // если кэширование не начато, то запустить поток с ожиданием
+            if (!_recaching) Task.Factory.StartNew(WaitToRecache);
+        }
+
+        /// <summary>
+        /// Методы запускающийся в отдельном потоке и используемый для того, чтобы перекэшировать отображаемое изображение,
+        /// но сделать это не сразу, а с небольшой паузой. Таким образом, например при вращении колеса мыши 
+        /// перекэширование будет происходить после того, как пользователь "докрутит до нужного масштаба", а не после
+        /// каждого деления колёсика
+        /// </summary>
+        public void WaitToRecache()
+        {
+            if (_recaching) return;
+            _recaching = true;
+            while (_timeToWait > 0)
+            {
+                _timeToWait -= _timeToWaitStep;
+                Thread.Sleep(_timeToWaitStep);
+            }
+            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
+            {
+                if (Img != null)
+                {
+                    Img.Source = _bmp.Precache((int)Img.Width, (int)Img.Height);
+                    InvalidateVisual();
+                    GC.Collect();
+                }
+                _recaching = false;
+            }));
         }
 
         public event EventDelegates.MethodContainer LoadingFailed;
