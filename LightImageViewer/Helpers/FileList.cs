@@ -30,7 +30,6 @@ namespace LightImageViewer.Helpers
                     _currentPath = value;
                     _currentDirectory = Path.GetDirectoryName(_currentPath);
                     _uri = new Uri(CurrentPath);
-                    RealoadFilesList();
                     OnPathChanged();
                 }
                 else
@@ -62,14 +61,19 @@ namespace LightImageViewer.Helpers
         public static int Count { get { return _filenames.Count(); } }
         public static string CurrentFileExtension { get { return _uri.Segments.Last().Split('.').Last().ToLower(); } }
 
+        static FileList()
+        {
+            PathChanged += ReloadFilesList;
+        }
+
         /// <summary>
         /// Загружаем список файлов (с которыми работает программа) из текущей директории
         /// </summary>
-        public static void RealoadFilesList()
+        public static void ReloadFilesList()
         {
             var bf = new List<string>() { "svg", /*"eps", "pdf",*/ "gif", "png", "bmp", "tif", "tiff", "jpg", "jpeg", "psd", "odd", "ico" };
 
-            var searchPattern = new Regex(string.Format(@"({0})$", string.Join("|", bf), RegexOptions.IgnoreCase));
+            var searchPattern = new Regex(string.Format(@"({0})$", string.Join("|", bf)), RegexOptions.IgnoreCase);
             var files = Directory.EnumerateFiles(CurrentDirectory, "*.*", SearchOption.TopDirectoryOnly);
             var search = files.Where(f => searchPattern.IsMatch(f));
             _filenames = search.ToList();
@@ -78,7 +82,7 @@ namespace LightImageViewer.Helpers
 
         public static bool GetPreviousImage()
         {
-            RealoadFilesList();
+            ReloadFilesList();
             if (Count == 0)
                 return false;
 
@@ -92,7 +96,7 @@ namespace LightImageViewer.Helpers
 
         public static bool GetNextImage()
         {
-            RealoadFilesList();
+            ReloadFilesList();
             var count = Count;
             if (Count == 0)
                 return false;
@@ -108,7 +112,6 @@ namespace LightImageViewer.Helpers
         public static void LoadStubImage()
         {
             _uri = new Uri("pack://application:,,,/Resources/error.png");
-            RealoadFilesList();
             OnPathChanged();
         }
 

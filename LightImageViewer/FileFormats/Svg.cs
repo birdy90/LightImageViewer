@@ -19,7 +19,9 @@ namespace LightImageViewer.FileFormats
                 _svg.Width = new SvgUnit(SvgUnitType.Pixel, width);
                 _svg.Height = new SvgUnit(SvgUnitType.Pixel, height);
             }
-            return _svg.Draw().ToBitmapImage();
+            var bmp = _svg.Draw().ToBitmapImage();
+            //bmp.Freeze();
+            return bmp;
         }
 
         public override void GetImageParameters()

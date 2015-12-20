@@ -24,6 +24,7 @@ namespace LightImageViewer.FileFormats
             _bmp.CacheOption = BitmapCacheOption.OnLoad;
             _bmp.UriSource = FileList.Uri;
             _bmp.EndInit();
+            //_bmp.Freeze();
             ImageBehavior.SetAnimatedSource(_canvas.Img, _bmp);
             ImageParameters.CalculateParameters(_bmp.PixelWidth, _bmp.PixelHeight, _canvas);
         }

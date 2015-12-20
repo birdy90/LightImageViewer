@@ -1,5 +1,4 @@
 ﻿using LightImageViewer.Helpers;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -11,24 +10,37 @@ namespace LightImageViewer.FileFormats
     {
         public int CurrentPage { get; set; }
 
-        public int PagesCount { get { return _bmp.GetFrameCount(FrameDimension.Page); } }
+        public int PagesCount { get { return _pagesCount; } }
 
         public Tif(MyCanvas canvas)
             :base(canvas)
         { }
 
         Bitmap _bmp;
+        int _pagesCount;
 
         public override BitmapImage Precache(int width, int height)
         {
-            _bmp.SelectActiveFrame(FrameDimension.Page, CurrentPage);            
+            using (var fs = new FileStream(FileList.CurrentPath, FileMode.Open, FileAccess.Read))
+            {
+                var bmp = new Bitmap(fs);
+                _pagesCount = bmp.GetFrameCount(FrameDimension.Page);
+                bmp.SelectActiveFrame(FrameDimension.Page, CurrentPage);
+                _bmp = new Bitmap(bmp);
+            }
             return _bmp.ToBitmapImage();
         }
 
         public override void GetImageParameters()
         {
-            _bmp = (Bitmap)Image.FromFile(FileList.CurrentPath);
             CurrentPage = 0;
+            using (var fs = new FileStream(FileList.CurrentPath, FileMode.Open, FileAccess.Read))
+            {
+                var bmp = new Bitmap(fs);
+                _pagesCount = bmp.GetFrameCount(FrameDimension.Page);
+                bmp.SelectActiveFrame(FrameDimension.Page, CurrentPage);
+                _bmp = new Bitmap(bmp);
+            }
             ImageParameters.CalculateParameters(_bmp.Width, _bmp.Height, _canvas);
         }
 

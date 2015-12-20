@@ -25,5 +25,7 @@ Light Image Viewer have some funtions that can be executed using a hotkeys. Ther
 * **P** - open with Photoshop (if installed)
 * **Del** - delete opened image
 * **Ctrl+D** - open current directory
+* **Ctrl+С** - copy image to clipboard
 * **Ctrl+Left arrow** - previous page for Tif with multiple pages
 * **Ctrl+Right arrow** - next page for Tif with multiple pages
+* **Ctrl+Mouse wheel** - scroll image vertically (centers image and scale to its top)

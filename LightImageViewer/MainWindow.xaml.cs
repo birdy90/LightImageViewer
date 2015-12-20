@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -10,6 +9,7 @@ using Microsoft.Win32;
 using System.Diagnostics;
 using System.Linq;
 using LightImageViewer.FileFormats;
+using System.Windows.Media.Imaging;
 
 namespace LightImageViewer
 {
@@ -19,7 +19,7 @@ namespace LightImageViewer
     public partial class MainWindow : Window
     {
         private int _minSize = 50;
-        private int _maxSizeMultiplier = 4;
+        private int _maxSizeMultiplier = 10;
         private double _scaleFactor = 1.1;
 
         private bool _panning = false;
@@ -37,7 +37,9 @@ namespace LightImageViewer
         public MainWindow()
         {
             InitializeComponent();
-            FileList.PathChanged += ImageUpdated;
+            FileList.PathChanged += UpdateLabels;
+            canvas.ImageStartLoading += ToggleLoadingRect;
+            canvas.ImageLoaded += ToggleLoadingRect;
         }
 
         #endregion
@@ -99,7 +101,7 @@ namespace LightImageViewer
         /// </summary>
         /// <param name="delta">Направление изменения масштаба</param>
         /// <param name="scaleCenter">Точка, относительно которой масштабируем (используется для сдвига изобажения)</param>
-        public void Scale(int delta, Point scaleCenter)
+        public bool Scale(int delta, Point scaleCenter)
         {
             // контролируем, было ли изменено изображение. если нет, то рекэширование не трежуется
             bool resized = false;
@@ -108,10 +110,11 @@ namespace LightImageViewer
             var oldHeight = (int)canvas.Img.Height;
             var width = 0;
             var height = 0;
-            var checkWidth = oldWidth > oldHeight;
+            
             if (delta < 0)
             {
-                if (checkWidth ? oldHeight > _minSize : oldWidth > _minSize)
+                // уменьшаем
+                if (ImageParameters.WidthBigger ? oldHeight > _minSize : oldWidth > _minSize)
                 {
                     width = (int)Math.Max(DecreaseSize(oldWidth), _minSize);
                     height = (int)Math.Max(DecreaseSize(oldHeight), _minSize);
@@ -120,9 +123,10 @@ namespace LightImageViewer
             }
             else
             {
-                if (checkWidth ?
-                    oldWidth < _maxSizeMultiplier * canvas.Img.Width :
-                    oldHeight < _maxSizeMultiplier * canvas.Img.Height)
+                // увеличиваем
+                if (ImageParameters.WidthBigger ?
+                    oldWidth < _maxSizeMultiplier * canvas.ActualWidth:
+                    oldHeight < _maxSizeMultiplier * canvas.ActualHeight)
                 {
                     width = (int)Math.Min(IncreaseSize(oldWidth), _maxSizeMultiplier * canvas.Img.Width);
                     height = (int)Math.Min(IncreaseSize(oldHeight), _maxSizeMultiplier * canvas.Img.Height);
@@ -131,7 +135,7 @@ namespace LightImageViewer
             }
 
             // если изображение не изменилось, то ничего не делаем
-            if (!resized) return;
+            if (!resized) return resized;
 
 
             // задаём новые размеры изображения
@@ -150,6 +154,7 @@ namespace LightImageViewer
 
             canvas.InvalidateVisual();
             OnImageChanged();
+            return resized;
         }
 
         /// <summary>
@@ -182,17 +187,17 @@ namespace LightImageViewer
             if (!ShiftPressed && !CtrlPressed && !AltPressed)
             {
                 Scale(e.Delta, e.GetPosition(canvas));
-                OnImageChanged();
             }
             if (CtrlPressed)
             {
                 var scrollSize = 40;
-                var center = new Point(ActualWidth / 2d, 0);
-                while (canvas.Img.Width < ActualWidth * 2 / 5)
+                var center = new Point(ActualWidth / 2d, 0d);
+                var scaled = true;
+                while (canvas.Img.Width < ActualWidth * 2d / 5d && scaled)
                 {
                     canvas.ImgLeft = center.X - canvas.Img.Width / 2d;
-                    canvas.ImgTop = 0;
-                    Scale(1, center);
+                    canvas.ImgTop = 0d;
+                    scaled = Scale(1, center);
                 }
                 if (canvas.ImgTop == 0)
                     canvas.ImgTop = scrollSize * 1.5;
@@ -240,9 +245,11 @@ namespace LightImageViewer
                         break;
                     case Key.Down:
                         Scale(-1, centerPoint);
+                        canvas.InvalidateVisual();
                         break;
                     case Key.Up:
                         Scale(1, centerPoint);
+                        canvas.InvalidateVisual();
                         break;
                     case Key.Left:
                         if (FileList.GetPreviousImage()) break;
@@ -267,8 +274,7 @@ namespace LightImageViewer
                             File.Delete(FileList.CurrentPath);
                         }
                         var _oldIndex = FileList.CurrentFileIndex;
-                        FileList.RealoadFilesList();
-                        canvas.Clear();
+                        FileList.ReloadFilesList();
                         if (_oldIndex == FileList.Count)
                             _oldIndex = FileList.Count - 1;
                         if (FileList.Count == 0)
@@ -282,6 +288,9 @@ namespace LightImageViewer
             if (CtrlPressed)
                 switch (e.Key)
                 {
+                    case Key.C:
+                        Clipboard.SetImage((BitmapSource)canvas.Img.Source);
+                        break;
                     case Key.D:
                         var psPath = "explorer.exe";
                         if (psPath != null)
@@ -305,12 +314,6 @@ namespace LightImageViewer
         #endregion
 
 
-        public void ImageUpdated()
-        {
-            FileList.RealoadFilesList();
-            UpdateLabels();
-        }
-
         public void UpdateLabels()
         {
             var pages = "";
@@ -320,9 +323,25 @@ namespace LightImageViewer
                 if (mp.PagesCount > 1)
                     pages = string.Format(" page {0} from {1}", mp.CurrentPage + 1, mp.PagesCount);
             }
-            labelName.Content = FileList.CurrentPath.Split('\\').Last() + pages;
-            labelPath.Content = FileList.CurrentPath;
+            if (FileList.CurrentPath != null)
+            {
+                labelName.Content = FileList.CurrentPath.Split('\\').Last() + pages;
+                labelPath.Content = FileList.CurrentPath;
+            }
+            else
+            {
+                labelName.Content = "not found";
+                labelPath.Content = FileList.CurrentDirectory + "*not found*";
+            }
             labelCount.Content = string.Format("{0} / {1}", FileList.CurrentFileIndex + 1, FileList.Count);
+        }
+        
+        public void ToggleLoadingRect()
+        {
+            if (loadingRect.Visibility == Visibility.Hidden)
+                loadingRect.Visibility = Visibility.Visible;
+            else
+                loadingRect.Visibility = Visibility.Hidden;
         }
 
         public static bool IsFileReady(string sFilename)

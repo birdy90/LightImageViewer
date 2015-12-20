@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using WpfAnimatedGif;
 using LightImageViewer.FileFormats;
-using System.Windows.Media.Imaging;
 using System.Threading;
 using System.Windows;
 using System.Threading.Tasks;
@@ -65,6 +64,7 @@ namespace LightImageViewer
             Children.Clear();
             Img = new Image();
             Children.Add(Img);
+            InvalidateVisual();
             GC.Collect();
         }
         
@@ -76,10 +76,11 @@ namespace LightImageViewer
             SetLeft(Img, ImgLeft);
         }
 
-        public void DrawImage()
+        public async void DrawImage()
         {
             try
             {
+                OnImagestartLoading();
                 Clear();
                 switch (FileList.CurrentFileExtension)
                 {
@@ -107,7 +108,8 @@ namespace LightImageViewer
                         break;
                 }
                 _bmp.GetImageParameters();
-                Recache(true);
+                await Recache(true);
+                OnImageLoaded();
             }
             catch (Exception e)
             {
@@ -115,14 +117,16 @@ namespace LightImageViewer
             }
         }
 
-        public void Recache(bool immediate = false)
+        public async Task Recache(bool immediate = false)
         {
+            if (_recaching) return;
             // обновляем счетчик ожидания рекэширования
             _timeToWait = _timeToWaitPreset;
             if (immediate)
                 _timeToWait = 0;
             // если кэширование не начато, то запустить поток с ожиданием
-            if (!_recaching) Task.Factory.StartNew(WaitToRecache);
+            if (!_recaching)
+                await Task.Factory.StartNew(WaitToRecache);
         }
 
         /// <summary>
@@ -133,18 +137,26 @@ namespace LightImageViewer
         /// </summary>
         public void WaitToRecache()
         {
-            if (_recaching) return;
             _recaching = true;
             while (_timeToWait > 0)
             {
                 _timeToWait -= _timeToWaitStep;
                 Thread.Sleep(_timeToWaitStep);
             }
+            int w = 0;
+            int h = 0;
+            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
+            { 
+                w = (int)Img.Width;
+                h = (int)Img.Height;
+            }));
+            //var img = _bmp.Precache(w, h);
             Application.Current.Dispatcher.BeginInvoke((Action)(() =>
             {
                 if (Img != null)
                 {
-                    Img.Source = _bmp.Precache((int)Img.Width, (int)Img.Height);
+                    var img = _bmp.Precache(w, h);
+                    Img.Source = img;
                     InvalidateVisual();
                     GC.Collect();
                 }
@@ -153,10 +165,23 @@ namespace LightImageViewer
         }
 
         public event EventDelegates.MethodContainer LoadingFailed;
+        public event EventDelegates.MethodContainer ImageLoaded;
+        public event EventDelegates.MethodContainer ImageStartLoading;
+
 
         public void OnLoadingFailed()
         {
             if (LoadingFailed != null) LoadingFailed();
+        }
+
+        public void OnImageLoaded()
+        {
+            if (ImageLoaded != null) ImageLoaded();
+        }
+
+        public void OnImagestartLoading()
+        {
+            if (ImageLoaded != null) ImageLoaded();
         }
     }
 }

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:my="clr-namespace:LightImageViewer"
         x:Name="MyWindow"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
         Title="MainWindow" Height="700" Width="700" 
         HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Hidden" 
         ScrollViewer.HorizontalScrollBarVisibility="Hidden" Loaded="Window_Loaded" MouseWheel="Window_MouseWheel" KeyDown="MyWindow_KeyDown" AllowsTransparency="True" WindowStyle="None" SnapsToDevicePixels="True">
@@ -69,5 +70,6 @@
         </Label>
         <Label x:Name="labelName" Height="60" VerticalAlignment="Bottom" VerticalContentAlignment="Bottom" Margin="0,0,0,22" Foreground="#FFF7F7F7" FontSize="21.333"/>
         <Label x:Name="labelCount" Content="0 / 0" Height="30" VerticalAlignment="Bottom" VerticalContentAlignment="Center" Margin="0" Foreground="#FFF7F7F7" HorizontalAlignment="Right" Width="100" HorizontalContentAlignment="Right" FontSize="16"/>
+        <Label x:Name="loadingRect" Content="loading" Canvas.Left="340" Canvas.Top="327" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="32" Visibility="Hidden" Panel.ZIndex="100"/>
     </Grid>
 </Window>
