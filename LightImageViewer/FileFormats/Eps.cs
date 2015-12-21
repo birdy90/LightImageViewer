@@ -3,13 +3,23 @@ using System.Windows.Media.Imaging;
 
 namespace LightImageViewer.FileFormats
 {
-    public class Eps : MyImage
+    /// <summary>
+    /// Eps image
+    /// </summary>
+    public class Eps : ImageReader
     {
+        /// <summary>
+        /// Bitmap saved after reading
+        /// </summary>
+        Bitmap _bmp;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="canvas">Parent canvas object</param>
         public Eps(MyCanvas canvas)
             :base(canvas)
         { }
-
-        Bitmap _bmp;
 
         public override BitmapImage Precache(int width, int height)
         {
@@ -17,7 +27,6 @@ namespace LightImageViewer.FileFormats
             if (ImageParameters.BmpWidth > width)
                 mi.Zoom(width, height);
             return mi.ToBitmap().ToBitmapImage();*/
-
             return null;
         }
 

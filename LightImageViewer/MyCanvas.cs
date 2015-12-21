@@ -10,28 +10,54 @@ using System.Threading.Tasks;
 
 namespace LightImageViewer
 {
+    /// <summary>
+    /// Custom canvas class. It manages creating and positioning of loaded images
+    /// </summary>
     public class MyCanvas : Canvas
     {
+        /// <summary>
+        /// Displayed image
+        /// </summary>
         private Image _img;
-        private MyImage _bmp;
 
+        /// <summary>
+        /// Opened image reader. Serves loading and rendering of images
+        /// </summary>
+        private ImageReader _bmp;
+
+        /// <summary>
+        /// Wait time before recaching
+        /// </summary>
         private int _timeToWait;
+
+        /// <summary>
+        /// Default time we need to wait before recaching
+        /// </summary>
         private int _timeToWaitPreset = 350;
-        private int _timeToWaitStep = 10;
+
+        /// <summary>
+        /// Time decreasing step. It's needed if while waiting for recaching we done new operation,
+        /// and recaching time must be reset to it's preset
+        /// </summary>
+        private int _timeToWaitStep = 50;
+
+        /// <summary>
+        /// If image reader is waiting for recaching
+        /// </summary>
         private bool _recaching = false;
 
         /// <summary>
-        /// Горизонтальное положение изображения
+        /// Get or sets horizontal position
         /// </summary>
         public double ImgLeft { get; set; }
 
         /// <summary>
-        /// Вертикальное положение изображения
+        /// Get or sets vertical position
         /// </summary>
         public double ImgTop { get; set; }
 
         /// <summary>
-        /// Текущий отрисовываемый объект Image
+        /// Gets or sets current image
         /// </summary>
         public Image Img
         {
@@ -39,12 +65,18 @@ namespace LightImageViewer
             set { _img = value; }
         }
 
-        public MyImage Bmp
+        /// <summary>
+        /// Gets or sets current image reader
+        /// </summary>
+        public ImageReader Bmp
         {
             get { return _bmp; }
             set { _bmp = value; }
         }
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public MyCanvas()
         {
             Img = new Image();
@@ -55,7 +87,7 @@ namespace LightImageViewer
         }
 
         /// <summary>
-        /// Очистка текущего состояния холста
+        /// Clean current canvas state
         /// </summary>
         public void Clear()
         {
@@ -68,14 +100,20 @@ namespace LightImageViewer
             GC.Collect();
         }
         
+        /// <summary>
+        /// Renderding of canvas
+        /// </summary>
+        /// <param name="dc"></param>
         protected override void OnRender(DrawingContext dc)
         {
             if (Img == null) return;
-
             SetTop(Img, ImgTop);
             SetLeft(Img, ImgLeft);
         }
 
+        /// <summary>
+        /// Creating new image and rendering of it
+        /// </summary>
         public async void DrawImage()
         {
             try
@@ -104,36 +142,41 @@ namespace LightImageViewer
                         _bmp = new Ico(this);
                         break;
                     default:
-                        _bmp = new MyImage(this);
+                        _bmp = new ImageReader(this);
                         break;
                 }
                 _bmp.GetImageParameters();
                 await Recache(true);
-                OnImageLoaded();
             }
             catch (Exception e)
             {
                 OnLoadingFailed();
             }
+            finally
+            {
+                OnImageLoaded();
+            }
         }
 
+        /// <summary>
+        /// Command to recache image. Starts new thread or set new wait time if it is working
+        /// </summary>
+        /// <param name="immediate">Set wait time to 0 if is true</param>
+        /// <returns></returns>
         public async Task Recache(bool immediate = false)
         {
             if (_recaching) return;
-            // обновляем счетчик ожидания рекэширования
+            // refresh wait time
             _timeToWait = _timeToWaitPreset;
             if (immediate)
                 _timeToWait = 0;
-            // если кэширование не начато, то запустить поток с ожиданием
+            // if recache thread is not started then start it
             if (!_recaching)
                 await Task.Factory.StartNew(WaitToRecache);
         }
 
         /// <summary>
-        /// Методы запускающийся в отдельном потоке и используемый для того, чтобы перекэшировать отображаемое изображение,
-        /// но сделать это не сразу, а с небольшой паузой. Таким образом, например при вращении колеса мыши 
-        /// перекэширование будет происходить после того, как пользователь "докрутит до нужного масштаба", а не после
-        /// каждого деления колёсика
+        /// Rechaching thread
         /// </summary>
         public void WaitToRecache()
         {
@@ -150,7 +193,6 @@ namespace LightImageViewer
                 w = (int)Img.Width;
                 h = (int)Img.Height;
             }));
-            //var img = _bmp.Precache(w, h);
             Application.Current.Dispatcher.BeginInvoke((Action)(() =>
             {
                 if (Img != null)
@@ -167,7 +209,6 @@ namespace LightImageViewer
         public event EventDelegates.MethodContainer LoadingFailed;
         public event EventDelegates.MethodContainer ImageLoaded;
         public event EventDelegates.MethodContainer ImageStartLoading;
-
 
         public void OnLoadingFailed()
         {

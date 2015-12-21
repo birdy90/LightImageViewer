@@ -6,21 +6,34 @@ using System.Text.RegularExpressions;
 
 namespace LightImageViewer.Helpers
 {
+    /// <summary>
+    /// Files manager for opening files
+    /// </summary>
     public static class FileList
     {
+        /// <summary>
+        /// Current file path
+        /// </summary>
         private static string _currentPath;
 
-        private static string _currentDirectory;
-
+        /// <summary>
+        /// Uri of an opened image
+        /// </summary>
         private static Uri _uri;
 
+        /// <summary>
+        /// Index of a file in current directory
+        /// </summary>
         private static int _currentFileIndex;
 
         /// <summary>
-        /// Список файлов в текущей директории
+        /// List of all files that can be opened byt viewer in current directory
         /// </summary>
         private static List<string> _filenames = new List<string>();
 
+        /// <summary>
+        /// Get or sets current path
+        /// </summary>
         public static string CurrentPath
         {
             set
@@ -28,25 +41,27 @@ namespace LightImageViewer.Helpers
                 if (File.Exists(value))
                 {
                     _currentPath = value;
-                    _currentDirectory = Path.GetDirectoryName(_currentPath);
+                    CurrentDirectory = Path.GetDirectoryName(_currentPath);
                     _uri = new Uri(CurrentPath);
                     OnPathChanged();
                 }
                 else
                 {
-                    _currentDirectory = Path.GetDirectoryName(value);
+                    CurrentDirectory = Path.GetDirectoryName(value);
                     LoadStubImage();
                 }
             }
             get { return _currentPath; }
         }
 
-        public static string CurrentDirectory
-        {
-            get { return _currentDirectory; }
-            set { _currentDirectory = value; }
-        }
+        /// <summary>
+        /// Gets or sets current directory
+        /// </summary>
+        public static string CurrentDirectory { get; private set; }
 
+        /// <summary>
+        /// Gets or sets current index of a file. Set calls for current path change
+        /// </summary>
         public static int CurrentFileIndex
         {
             get { return _currentFileIndex; }
@@ -57,17 +72,31 @@ namespace LightImageViewer.Helpers
             }
         }
 
+        /// <summary>
+        /// Gets current Uri
+        /// </summary>
         public static Uri Uri { get { return _uri; } }
+
+        /// <summary>
+        /// Get the number of files in current directory
+        /// </summary>
         public static int Count { get { return _filenames.Count(); } }
+
+        /// <summary>
+        /// Get the extension of current opened image
+        /// </summary>
         public static string CurrentFileExtension { get { return _uri.Segments.Last().Split('.').Last().ToLower(); } }
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         static FileList()
         {
             PathChanged += ReloadFilesList;
         }
 
         /// <summary>
-        /// Загружаем список файлов (с которыми работает программа) из текущей директории
+        /// Loads list of files program can work with from current directory
         /// </summary>
         public static void ReloadFilesList()
         {
@@ -80,6 +109,10 @@ namespace LightImageViewer.Helpers
             _currentFileIndex = _filenames.IndexOf(_currentPath);
         }
 
+        /// <summary>
+        /// Loads previous image
+        /// </summary>
+        /// <returns>Returns if an image was changed</returns>
         public static bool GetPreviousImage()
         {
             ReloadFilesList();
@@ -94,6 +127,10 @@ namespace LightImageViewer.Helpers
             return true;
         }
 
+        /// <summary>
+        /// Opens next image
+        /// </summary>
+        /// <returns>Return if an image was changed</returns>
         public static bool GetNextImage()
         {
             ReloadFilesList();
@@ -109,6 +146,9 @@ namespace LightImageViewer.Helpers
             return true;
         }
 
+        /// <summary>
+        /// Load a stub image for cases when normal image load process failed
+        /// </summary>
         public static void LoadStubImage()
         {
             _uri = new Uri("pack://application:,,,/Resources/error.png");

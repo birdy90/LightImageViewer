@@ -18,21 +18,50 @@ namespace LightImageViewer
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Mimum size of image
+        /// </summary>
         private int _minSize = 50;
+
+        /// <summary>
+        /// Max size relative to it's initial size that image can reach
+        /// </summary>
         private int _maxSizeMultiplier = 10;
+
+        /// <summary>
+        /// Factor of scaling
+        /// </summary>
         private double _scaleFactor = 1.1;
 
+        /// <summary>
+        /// If image is panning at the time
+        /// </summary>
         private bool _panning = false;
+
+        /// <summary>
+        /// Previous mouse position
+        /// </summary>
         private Point _lastPoint;
 
+        /// <summary>
+        /// If shift button is pressed
+        /// </summary>
         private bool ShiftPressed { get { return (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)); } }
+
+        /// <summary>
+        /// If control button is pressed
+        /// </summary>
         private bool CtrlPressed { get { return (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)); } }
+
+        /// <summary>
+        /// If alt button is pressed
+        /// </summary>
         private bool AltPressed { get { return (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt)); } }
 
         #region Конструкторы
 
         /// <summary>
-        /// Конструктор по умолчанию
+        /// Default constructor
         /// </summary>
         public MainWindow()
         {
@@ -47,13 +76,16 @@ namespace LightImageViewer
 
         #region Методы
 
+        /// <summary>
+        /// Close the application
+        /// </summary>
         public void CloseApplication()
         {
             Close();
         }
 
         /// <summary>
-        /// Обработка нажатия на кнопку закрытия окна
+        /// Click on window close button
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -63,7 +95,7 @@ namespace LightImageViewer
         }
 
         /// <summary>
-        /// Обработка загрузки главного окна приложения
+        /// Main window loaded handler
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -80,7 +112,7 @@ namespace LightImageViewer
         }
 
         /// <summary>
-        /// Обработка окончания рендеринга формы
+        /// Form rendering finished handler
         /// </summary>
         /// <param name="e"></param>
         protected override void OnContentRendered(EventArgs e)
@@ -96,16 +128,13 @@ namespace LightImageViewer
         #region Масштабирование
 
         /// <summary>
-        /// Масштабирование, используется в событиях вращения колеса мыши и нажатия стрелок 
-        /// вверх и вниз
+        /// Scaling of an image
         /// </summary>
-        /// <param name="delta">Направление изменения масштаба</param>
-        /// <param name="scaleCenter">Точка, относительно которой масштабируем (используется для сдвига изобажения)</param>
+        /// <param name="delta">Scale change direction</param>
+        /// <param name="scaleCenter">Anchor point for scaling</param>
         public bool Scale(int delta, Point scaleCenter)
         {
-            // контролируем, было ли изменено изображение. если нет, то рекэширование не трежуется
             bool resized = false;
-
             var oldWidth = (int)canvas.Img.Width;
             var oldHeight = (int)canvas.Img.Height;
             var width = 0;
@@ -113,7 +142,7 @@ namespace LightImageViewer
             
             if (delta < 0)
             {
-                // уменьшаем
+                // decrease
                 if (ImageParameters.WidthBigger ? oldHeight > _minSize : oldWidth > _minSize)
                 {
                     width = (int)Math.Max(DecreaseSize(oldWidth), _minSize);
@@ -123,7 +152,7 @@ namespace LightImageViewer
             }
             else
             {
-                // увеличиваем
+                // increase
                 if (ImageParameters.WidthBigger ?
                     oldWidth < _maxSizeMultiplier * canvas.ActualWidth:
                     oldHeight < _maxSizeMultiplier * canvas.ActualHeight)
@@ -134,18 +163,16 @@ namespace LightImageViewer
                 }
             }
 
-            // если изображение не изменилось, то ничего не делаем
+            // if size haven't changed then we don't need to rescale image
             if (!resized) return resized;
-
-
-            // задаём новые размеры изображения
+            
+            // set new image dimensions
             canvas.Img.Width = width;
             canvas.Img.Height = height;
 
             canvas.Recache();
 
-            // сдвигаем изображение так, чтобы мышь осталась в той же точке на картинке (масштабирование 
-            // относительно указателя мыши)
+            // set new image position based on anchor point
             var mp = scaleCenter;
             var a = (oldHeight - height) * (canvas.ImgTop - mp.Y) / oldHeight;
             var b = (oldWidth - width) * (canvas.ImgLeft - mp.X) / oldWidth;
@@ -158,30 +185,30 @@ namespace LightImageViewer
         }
 
         /// <summary>
-        /// Уменьшение масштаба
+        /// Decrease value
         /// </summary>
-        /// <param name="scale"></param>
-        /// <returns></returns>
-        public double DecreaseSize(double scale)
+        /// <param name="value"></param>
+        /// <returns>Decreased value</returns>
+        public double DecreaseSize(double value)
         {
-            return scale /= _scaleFactor;
+            return value /= _scaleFactor;
         }
 
         /// <summary>
-        /// Увеличение масштаба
+        /// Increase value
         /// </summary>
-        /// <param name="scale"></param>
-        /// <returns></returns>
-        public double IncreaseSize(double scale)
+        /// <param name="value">Old value</param>
+        /// <returns>Increased value</returns>
+        public double IncreaseSize(double value)
         {
-            return scale *= _scaleFactor;
+            return value *= _scaleFactor;
         }
 
         #endregion
         
 
         #region Взаимодействие с пользователем
-
+        
         private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (!ShiftPressed && !CtrlPressed && !AltPressed)
@@ -205,7 +232,7 @@ namespace LightImageViewer
                 canvas.InvalidateVisual();
             }
         }
-
+        
         private void imageField_MouseUp(object sender, MouseButtonEventArgs e)
         {
             _panning = false;
@@ -284,6 +311,12 @@ namespace LightImageViewer
                         }
                         FileList.CurrentFileIndex = _oldIndex;
                         break;
+                    case Key.D0:
+                    case Key.NumPad0:
+                        ImageParameters.CalculateParameters(ImageParameters.BmpWidth, ImageParameters.BmpHeight, canvas);
+                        canvas.Recache();
+                        canvas.InvalidateVisual();
+                        break;
                 }
             if (CtrlPressed)
                 switch (e.Key)
@@ -314,6 +347,9 @@ namespace LightImageViewer
         #endregion
 
 
+        /// <summary>
+        /// Updating labels on a form
+        /// </summary>
         public void UpdateLabels()
         {
             var pages = "";
@@ -336,6 +372,9 @@ namespace LightImageViewer
             labelCount.Content = string.Format("{0} / {1}", FileList.CurrentFileIndex + 1, FileList.Count);
         }
         
+        /// <summary>
+        /// Set visibility of "loading" label
+        /// </summary>
         public void ToggleLoadingRect()
         {
             if (loadingRect.Visibility == Visibility.Hidden)
@@ -344,13 +383,18 @@ namespace LightImageViewer
                 loadingRect.Visibility = Visibility.Hidden;
         }
 
-        public static bool IsFileReady(string sFilename)
+        /// <summary>
+        /// Check if file is unlocked and can be deleted (from SO)
+        /// </summary>
+        /// <param name="filename">Checked file</param>
+        /// <returns></returns>
+        public static bool IsFileReady(string filename)
         {
-            // If the file can be opened for exclusive access it means that the file
+            // if the file can be opened for exclusive access it means that the file
             // is no longer locked by another process.
             try
             {
-                using (FileStream inputStream = File.Open(sFilename, FileMode.Open, FileAccess.Read, FileShare.None))
+                using (FileStream inputStream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.None))
                     if (inputStream.Length > 0)
                         return true;
                     else
@@ -360,6 +404,7 @@ namespace LightImageViewer
         }
 
         #endregion
+
 
         public event EventDelegates.MethodContainer ImageChanged;
 

@@ -1,5 +1,8 @@
 ﻿namespace LightImageViewer.FileFormats
 {
+    /// <summary>
+    /// Interface for images with multiple pages
+    /// </summary>
     public interface IMultiPages
     {
         int CurrentPage { get; set; }

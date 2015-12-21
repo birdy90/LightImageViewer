@@ -4,8 +4,15 @@ using System.Windows.Media.Imaging;
 
 namespace LightImageViewer.FileFormats
 {
-    public class Ico : MyImage
+    /// <summary>
+    /// Ico image
+    /// </summary>
+    public class Ico : ImageReader
     {
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="canvas">Parent canvas object</param>
         public Ico(MyCanvas canvas)
             :base(canvas)
         { }
@@ -21,7 +28,6 @@ namespace LightImageViewer.FileFormats
                 bmp.DecodePixelHeight = Math.Min(height, ImageParameters.BmpHeight);
             bmp.UriSource = FileList.Uri;
             bmp.EndInit();
-            //bmp.Freeze();
             return bmp;
         }
 
@@ -32,7 +38,6 @@ namespace LightImageViewer.FileFormats
             bmp.CacheOption = BitmapCacheOption.OnLoad;
             bmp.UriSource = FileList.Uri;
             bmp.EndInit();
-            //bmp.Freeze();
             ImageParameters.CalculateParameters(bmp.PixelWidth, bmp.PixelHeight, _canvas);
         }
     }

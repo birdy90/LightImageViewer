@@ -4,22 +4,37 @@ namespace LightImageViewer.Helpers
 {
     public static class ImageParameters
     {
-        public static int Hcount = 0;
-        public static int Wcount = 0;
-        public static int BmpHeight = 0;
+        /// <summary>
+        /// Image width
+        /// </summary>
         public static int BmpWidth = 0;
+
+        /// <summary>
+        /// Image height
+        /// </summary>
+        public static int BmpHeight = 0;
+
+        /// <summary>
+        /// Indicates if image is wider than canvas
+        /// </summary>
         public static bool WidthBigger = false;
+
+        /// <summary>
+        /// Aspect ratio of an image
+        /// </summary>
         public static double Aspect = 1;
 
+        /// <summary>
+        /// Calculate all image parameters on its passed dimensions
+        /// </summary>
+        /// <param name="w">Width of an image</param>
+        /// <param name="h">Height of an image</param>
+        /// <param name="_canvas">Canvas, that will be used for drawing image</param>
         public static void CalculateParameters(int w, int h, MyCanvas _canvas)
         {
             BmpWidth = w;
             BmpHeight = h;
-
-            if (BmpHeight > _canvas.ActualHeight)
-                Hcount = (int)Math.Ceiling(BmpHeight / _canvas.ActualHeight);
-            if (BmpWidth > _canvas.ActualWidth)
-                Wcount = (int)Math.Ceiling(BmpWidth / _canvas.ActualWidth);
+            
             Aspect = (double)BmpWidth / BmpHeight;
 
             WidthBigger = false;

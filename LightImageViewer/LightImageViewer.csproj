@@ -92,7 +92,8 @@
     <Compile Include="FileFormats\Gif.cs" />
     <Compile Include="FileFormats\Ico.cs" />
     <Compile Include="FileFormats\Interfaces\IMultiPages.cs" />
-    <Compile Include="FileFormats\MyImage.cs" />
+    <Compile Include="FileFormats\MultiPagedImage.cs" />
+    <Compile Include="FileFormats\ImageReader.cs" />
     <Compile Include="FileFormats\Pdf.cs" />
     <Compile Include="FileFormats\Svg.cs" />
     <Compile Include="FileFormats\Tif.cs" />

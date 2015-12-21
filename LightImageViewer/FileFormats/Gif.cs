@@ -4,13 +4,20 @@ using WpfAnimatedGif;
 
 namespace LightImageViewer.FileFormats
 {
-    public class Gif : MyImage
+    /// <summary>
+    /// Gif image
+    /// </summary>
+    public class Gif : ImageReader
     {
+        BitmapImage _bmp;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="canvas">Parent canvas object</param>
         public Gif(MyCanvas canvas)
             :base(canvas)
         { }
-
-        BitmapImage _bmp;
 
         public override BitmapImage Precache(int width, int height)
         {
@@ -24,7 +31,6 @@ namespace LightImageViewer.FileFormats
             _bmp.CacheOption = BitmapCacheOption.OnLoad;
             _bmp.UriSource = FileList.Uri;
             _bmp.EndInit();
-            //_bmp.Freeze();
             ImageBehavior.SetAnimatedSource(_canvas.Img, _bmp);
             ImageParameters.CalculateParameters(_bmp.PixelWidth, _bmp.PixelHeight, _canvas);
         }

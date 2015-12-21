@@ -22,6 +22,7 @@ Light Image Viewer have some funtions that can be executed using a hotkeys. Ther
 * **Right arrow** - next image
 * **Up arrow** - scale up
 * **Down arrow** - scale down
+* **Num0** - set initial size and position of image
 * **P** - open with Photoshop (if installed)
 * **Del** - delete opened image
 * **Ctrl+D** - open current directory

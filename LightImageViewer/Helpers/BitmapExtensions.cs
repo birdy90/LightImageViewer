@@ -7,6 +7,11 @@ namespace LightImageViewer.Helpers
 {
     public static class BitmapExtensions
     {
+        /// <summary>
+        /// Converts Bitmap to BitmapImage
+        /// </summary>
+        /// <param name="bitmap">Desired bitmap</param>
+        /// <returns>Rendered BitmapImage</returns>
         public static BitmapImage ToBitmapImage(this Bitmap bitmap)
         {
             using (var memory = new MemoryStream())

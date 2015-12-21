@@ -4,13 +4,23 @@ using Svg;
 
 namespace LightImageViewer.FileFormats
 {
-    public class Svg : MyImage
+    /// <summary>
+    /// Svg image
+    /// </summary>
+    public class Svg : ImageReader
     {
+        /// <summary>
+        /// Opened SVG document
+        /// </summary>
+        private SvgDocument _svg;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="canvas">Parent canvas object</param>
         public Svg(MyCanvas canvas)
             :base(canvas)
         { }
-
-        private SvgDocument _svg;
 
         public override BitmapImage Precache(int width, int height)
         {

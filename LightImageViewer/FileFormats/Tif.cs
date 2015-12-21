@@ -6,18 +6,23 @@ using System.Windows.Media.Imaging;
 
 namespace LightImageViewer.FileFormats
 {
-    public class Tif : MyImage, IMultiPages
+    /// <summary>
+    /// Tif image
+    /// </summary>
+    public class Tif : MultiPagedImage
     {
-        public int CurrentPage { get; set; }
+        /// <summary>
+        /// Bitmap saved after reading
+        /// </summary>
+        Bitmap _bmp;
 
-        public int PagesCount { get { return _pagesCount; } }
-
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="canvas">Parent canvas object</param>
         public Tif(MyCanvas canvas)
             :base(canvas)
         { }
-
-        Bitmap _bmp;
-        int _pagesCount;
 
         public override BitmapImage Precache(int width, int height)
         {
@@ -33,7 +38,7 @@ namespace LightImageViewer.FileFormats
 
         public override void GetImageParameters()
         {
-            CurrentPage = 0;
+            CurrentPage = GetLastPagePosition(CurrentPage);
             using (var fs = new FileStream(FileList.CurrentPath, FileMode.Open, FileAccess.Read))
             {
                 var bmp = new Bitmap(fs);
@@ -42,20 +47,6 @@ namespace LightImageViewer.FileFormats
                 _bmp = new Bitmap(bmp);
             }
             ImageParameters.CalculateParameters(_bmp.Width, _bmp.Height, _canvas);
-        }
-
-        public void NextPage()
-        {
-            if (CurrentPage < PagesCount - 1)
-                CurrentPage++;
-            Precache(1000, 1000);
-        }
-
-        public void PreviousPage()
-        {
-            if (CurrentPage > 0)
-                CurrentPage--;
-            Precache(1000, 1000);
         }
     }
 }
