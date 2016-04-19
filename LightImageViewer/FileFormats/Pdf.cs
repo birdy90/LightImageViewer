@@ -22,7 +22,7 @@ namespace LightImageViewer.FileFormats
 
         public override BitmapImage Precache(int width, int height)
         {
-            return new Bitmap(_rasterizer.GetPage(120, 120, CurrentPage + 1)).ToBitmapImage();
+            return new Bitmap(_rasterizer.GetPage(120, 120, CurrentPage + 1)).ToBitmapImage(width, height);
         }
 
         public override void GetImageParameters()

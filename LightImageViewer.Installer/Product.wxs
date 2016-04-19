@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:ui="http://schemas.microsoft.com/wix/UIExtension">
+	<Product Id="*"
+           Name="LightImageViewer"
+           Language="1033"
+           Version="0.1.0.4"
+           Manufacturer="Grigory Bederdinov"
+           UpgradeCode="{41BD0128-5978-4898-826B-15F1453A3039}">
+		<Package InstallerVersion="405"
+             InstallScope="perMachine"
+             Description="Light Image Viewer"
+             Manufacturer="Grigory Bederdinov"
+             Compressed="yes" />
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_MyDialogs" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+		<Feature Id="ProductFeature" Title="LightImageViewer" Level="1">
+      <ComponentGroupRef Id="Files" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="LightImageViewer" />
+			</Directory>
+		</Directory>
+	</Fragment>
+</Wix>

@@ -14,6 +14,11 @@ namespace LightImageViewer.FileFormats
     public class MultiPagedImage : ImageReader, IMultiPages
     {
         /// <summary>
+        /// Date format used in viewer
+        /// </summary>
+        private const string DateFormat = "dd/MM/yyyy";
+
+        /// <summary>
         /// Number of pages
         /// </summary>
         protected int _pagesCount;
@@ -72,7 +77,7 @@ namespace LightImageViewer.FileFormats
             var position = _positions.FirstOrDefault(s => s.Split(';')[1] == FileList.CurrentPath);
             if (position == null)
             {
-                _positions.Add(string.Format("{0};{1};{2}", index, FileList.CurrentPath, DateTime.Now.ToString("d")));
+                _positions.Add(string.Format("{0};{1};{2}", index, FileList.CurrentPath, DateTime.Now.ToString(DateFormat)));
                 File.WriteAllLines(_positionsFile, _positions);
                 return 0;
             }
@@ -88,7 +93,7 @@ namespace LightImageViewer.FileFormats
             sw.Start();
             DeleteOldPositions();
             var position = _positions.FirstOrDefault(s => s.Split(';')[1] == FileList.CurrentPath);
-            var line = string.Format("{0};{1};{2}", index, FileList.CurrentPath, DateTime.Now.ToString("d"));
+            var line = string.Format("{0};{1};{2}", index, FileList.CurrentPath, DateTime.Now.ToString(DateFormat));
             if (position != null)
                 _positions.Remove(position);
             _positions.Add(line);
@@ -105,7 +110,8 @@ namespace LightImageViewer.FileFormats
             var newPositions = new List<string>();
             foreach (var line in _positions)
             {
-                var date = DateTime.ParseExact(line.Split(';')[2], "d", CultureInfo.InvariantCulture);
+                var dateString = line.Split(';')[2];
+                var date = DateTime.ParseExact(dateString, DateFormat, null);
                 var dt = DateTime.Now - date;
                 if (dt <= TimeSpan.FromDays(120))
                     newPositions.Add(line);
@@ -125,7 +131,7 @@ namespace LightImageViewer.FileFormats
         }
 
         /// <summary>
-        /// Opening the previous pae of an image
+        /// Opening the previous page of an image
         /// </summary>
         public void PreviousPage()
         {

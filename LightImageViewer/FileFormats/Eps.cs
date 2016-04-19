@@ -26,7 +26,7 @@ namespace LightImageViewer.FileFormats
             /*var mi = _bmp.Clone();
             if (ImageParameters.BmpWidth > width)
                 mi.Zoom(width, height);
-            return mi.ToBitmap().ToBitmapImage();*/
+            return mi.ToBitmap().ToBitmapImage(width, height);*/
             return null;
         }
 

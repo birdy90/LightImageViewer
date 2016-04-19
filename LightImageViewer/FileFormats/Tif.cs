@@ -1,4 +1,5 @@
 ﻿using LightImageViewer.Helpers;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -33,7 +34,7 @@ namespace LightImageViewer.FileFormats
                 bmp.SelectActiveFrame(FrameDimension.Page, CurrentPage);
                 _bmp = new Bitmap(bmp);
             }
-            return _bmp.ToBitmapImage();
+            return _bmp.ToBitmapImage(width, height);
         }
 
         public override void GetImageParameters()
@@ -46,7 +47,10 @@ namespace LightImageViewer.FileFormats
                 bmp.SelectActiveFrame(FrameDimension.Page, CurrentPage);
                 _bmp = new Bitmap(bmp);
             }
-            ImageParameters.CalculateParameters(_bmp.Width, _bmp.Height, _canvas);
+            ImageParameters.CalculateParameters(
+                (int)Math.Min(_bmp.Width, _canvas.ActualWidth),
+                (int)Math.Min(_bmp.Height, _canvas.ActualHeight),
+                _canvas);
         }
     }
 }

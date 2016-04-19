@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Fragment>
+    <ComponentGroup Id="Files" Directory="INSTALLFOLDER" Source="$(var.LightImageViewer.TargetDir)">
+      <Component Id="CmpLightImageViewer.exe" Guid="{3CEA0744-ADF5-46C8-B8E1-09135906F022}" KeyPath="yes">
+        <File Id="MainExe" Name="LightImageViewer.exe" />
+      </Component>
+
+      <Component Id="CmpLightImageViewerAssociations" Guid="{5C3B2348-3421-4C17-B994-5A0B3F24039C}" KeyPath="yes">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.svg" Value="LightImageViewerSvg" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.gif" Value="LightImageViewerGif" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.png" Value="LightImageViewerPng" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.bmp" Value="LightImageViewerBmp" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.tif" Value="LightImageViewerTif" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.tiff" Value="LightImageViewerTiff" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.jpg" Value="LightImageViewerJpg" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.jpeg" Value="LightImageViewerJpeg" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.psd" Value="LightImageViewerPsd" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.odd" Value="LightImageViewerOdd" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.ico" Value="LightImageViewerIco" Type="string" />
+      </Component>
+      
+      <Component Id="CmpLightImageViewerProgId" Guid="{391FBC30-B5A1-4AB7-8FA4-254C1CE2BF69}" KeyPath="yes">
+        <ProgId Id="LightImageViewerSvg" Description="Light image viewer">
+          <Extension Id="svg">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerGif" Description="Light image viewer">
+          <Extension Id="gif">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerPng" Description="Light image viewer">          
+          <Extension Id="png">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerBmp" Description="Light image viewer">            
+          <Extension Id="bmp">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerTif" Description="Light image viewer">            
+          <Extension Id="tif">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerTiff" Description="Light image viewer">            
+          <Extension Id="tiff">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerJpg" Description="Light image viewer">            
+          <Extension Id="jpg">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerJpeg" Description="Light image viewer">            
+          <Extension Id="jpeg">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerPsd" Description="Light image viewer">            
+          <Extension Id="psd">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerOdd" Description="Light image viewer">            
+          <Extension Id="odd">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="LightImageViewerIco" Description="Light image viewer">            
+          <Extension Id="ico">
+            <Verb Id="open" TargetFile="MainExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+      </Component>
+
+      <Component Id="CmpLightImageViewer.exe.config" Guid="{CE2F7D3B-E1D5-4A38-8F87-74673AA86EBE}" KeyPath="yes">
+        <File Name="LightImageViewer.exe.config" />
+      </Component>
+      
+      <Component Id="CmpGhostscript.NET.dll" Guid="{A1D6CEE9-BE9B-48E4-AF43-9A6279A9C0AB}" KeyPath="yes">
+        <File Name="Ghostscript.NET.dll" />
+      </Component>
+      
+      <Component Id="CmpGhostscript.NET.xml" Guid="{80A8A170-355E-4FCD-AA05-C5D6D382A50D}" KeyPath="yes">
+        <File Name="Ghostscript.NET.xml" />
+      </Component>
+      
+      <Component Id="CmpSvg.dll" Guid="{44EC5CA8-A216-4B6D-817D-E636D6C930AA}" KeyPath="yes">
+        <File Name="Svg.dll" />
+      </Component>
+      
+      <Component Id="CmpSvg.xml" Guid="{F700C4C4-6149-4062-AD57-4E891B7452A5}" KeyPath="yes">
+        <File Name="Svg.xml" />
+      </Component>
+      
+      <Component Id="CmpWpfAnimatedGif.dll" Guid="{408B14BA-3640-4B25-9EAF-7745C6D1A057}" KeyPath="yes">
+        <File Name="WpfAnimatedGif.dll" />
+      </Component>
+      
+      <Component Id="CmpWpfAnimatedGif.xml" Guid="{807FD1B0-00E4-47AD-817C-835CC39BB7D7}" KeyPath="yes">
+        <File Name="WpfAnimatedGif.xml" />
+      </Component>
+    </ComponentGroup>    
+	</Fragment>
+</Wix>
