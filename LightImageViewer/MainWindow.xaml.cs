@@ -10,6 +10,8 @@ using System.Diagnostics;
 using System.Linq;
 using LightImageViewer.FileFormats;
 using System.Windows.Media.Imaging;
+using LightImageViewer.Utilities.ViewModels;
+using LightImageViewer.Utilities;
 
 namespace LightImageViewer
 {
@@ -18,6 +20,8 @@ namespace LightImageViewer
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainWindowViewModel ctx { get { return DataContext as MainWindowViewModel; } }
+
         /// <summary>
         /// Mimum size of image
         /// </summary>
@@ -66,6 +70,7 @@ namespace LightImageViewer
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new MainWindowViewModel();
             FileList.PathChanged += UpdateLabels;
             canvas.ImageStartLoading += ToggleLoadingRect;
             canvas.ImageLoaded += ToggleLoadingRect;
@@ -328,6 +333,11 @@ namespace LightImageViewer
                         var psPath = "explorer.exe";
                         if (psPath != null)
                             Process.Start(psPath, FileList.CurrentDirectory);
+                        break;
+                    case Key.O:
+                        var optionsWindow = new SettingsView();
+                        optionsWindow.Owner = this;
+                        optionsWindow.ShowDialog();
                         break;
                     case Key.Left:
                         if (!(canvas.Bmp is IMultiPages)) return;

@@ -90,20 +90,26 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="FileFormats\Eps.cs" />
-    <Compile Include="FileFormats\Gif.cs" />
-    <Compile Include="FileFormats\Ico.cs" />
-    <Compile Include="FileFormats\Interfaces\IMultiPages.cs" />
-    <Compile Include="FileFormats\MultiPagedImage.cs" />
-    <Compile Include="FileFormats\ImageReader.cs" />
-    <Compile Include="FileFormats\Pdf.cs" />
-    <Compile Include="FileFormats\Svg.cs" />
-    <Compile Include="FileFormats\Tif.cs" />
-    <Compile Include="Helpers\BitmapExtensions.cs" />
-    <Compile Include="Helpers\EventDelegates.cs" />
-    <Compile Include="Helpers\FileList.cs" />
-    <Compile Include="Helpers\ImageParameters.cs" />
+    <Compile Include="Utilities\FileFormats\Eps.cs" />
+    <Compile Include="Utilities\FileFormats\Gif.cs" />
+    <Compile Include="Utilities\FileFormats\Ico.cs" />
+    <Compile Include="Utilities\FileFormats\Interfaces\IMultiPages.cs" />
+    <Compile Include="Utilities\FileFormats\MultiPagedImage.cs" />
+    <Compile Include="Utilities\FileFormats\ImageReader.cs" />
+    <Compile Include="Utilities\FileFormats\Pdf.cs" />
+    <Compile Include="Utilities\FileFormats\Svg.cs" />
+    <Compile Include="Utilities\FileFormats\Tif.cs" />
+    <Compile Include="Utilities\Helpers\BitmapExtensions.cs" />
+    <Compile Include="Utilities\Helpers\EventDelegates.cs" />
+    <Compile Include="Utilities\Helpers\FileList.cs" />
+    <Compile Include="Utilities\Helpers\ImageParameters.cs" />
     <Compile Include="MyCanvas.cs" />
+    <Compile Include="Utilities\Helpers\ViewModelBase.cs" />
+    <Compile Include="Utilities\Settings\Settings.cs" />
+    <Compile Include="Utilities\Settings\SettingsView.xaml.cs">
+      <DependentUpon>SettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\ViewModels\MainWindowViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -116,6 +122,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Utilities\Settings\SettingsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
