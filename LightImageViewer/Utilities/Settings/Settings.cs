@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
 
 namespace LightImageViewer.Utilities
 {
@@ -11,12 +12,27 @@ namespace LightImageViewer.Utilities
         private static Settings _instance = new Settings();
         public static Settings Instance { get { return _instance; } }
 
+        /// <summary>
+        /// Gets or sets transparency of the application background
+        /// </summary>
         public float BackgroundTransparency
         {
             get { return GetProperty<float>(); }
             set { SetProperty(value); }
         }
 
+        /// <summary>
+        /// Gets or sets color of the application background
+        /// </summary>
+        public Color BackgroundColor
+        {
+            get { return GetProperty<Color>(); }
+            set { SetProperty(value); }
+        }
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         private Settings() { }
 
         /// <summary>
@@ -50,8 +66,10 @@ namespace LightImageViewer.Utilities
             return true;
         }
 
+        /// <summary>
+        /// INotifyPropertyChanged interface implementation
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
-
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
