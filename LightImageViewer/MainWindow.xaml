@@ -7,9 +7,16 @@
         Title="MainWindow" Height="700" Width="700" 
         HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Hidden" 
         ScrollViewer.HorizontalScrollBarVisibility="Hidden" Loaded="Window_Loaded" MouseWheel="Window_MouseWheel" KeyDown="MyWindow_KeyDown" AllowsTransparency="True" WindowStyle="None" SnapsToDevicePixels="True">
+
     <Window.Background>
         <SolidColorBrush Color="Black" Opacity="0.7"/>
     </Window.Background>
+
+    <Window.ContextMenu>
+        <ContextMenu>
+        </ContextMenu>
+    </Window.ContextMenu>
+
     <Grid Margin="0" ClipToBounds="True">
         <my:MyCanvas x:Name="canvas" Margin="0" ImgLeft="0" ImgTop="0"
                      MouseUp="imageField_MouseUp" MouseMove="imageField_MouseMove" MouseDown="imageField_MouseDown">
