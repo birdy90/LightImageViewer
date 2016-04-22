@@ -25,7 +25,7 @@ namespace LightImageViewer.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("30")]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
         public float BackgroundTransparency {
             get {
                 return ((float)(this["BackgroundTransparency"]));

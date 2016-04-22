@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="BackgroundTransparency" Type="System.Single" Scope="User">
-      <Value Profile="(Default)">30</Value>
+      <Value Profile="(Default)">20</Value>
     </Setting>
     <Setting Name="BackgroundColor" Type="System.Windows.Media.Color" Scope="User">
       <Value Profile="(Default)">#FF000000</Value>

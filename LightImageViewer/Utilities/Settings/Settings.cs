@@ -1,5 +1,8 @@
-﻿using System.ComponentModel;
+﻿using LightImageViewer.Utilities.Helpers;
+using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace LightImageViewer.Utilities
@@ -11,6 +14,10 @@ namespace LightImageViewer.Utilities
         /// </summary>
         private static Settings _instance = new Settings();
         public static Settings Instance { get { return _instance; } }
+        
+        public ICommand SetColor { get; set; }
+
+        public ICommand CloseWindow { get; set; }
 
         /// <summary>
         /// Gets or sets transparency of the application background
@@ -33,7 +40,11 @@ namespace LightImageViewer.Utilities
         /// <summary>
         /// Default constructor
         /// </summary>
-        private Settings() { }
+        private Settings()
+        {
+            CloseWindow = new SimpleCommand(new Action<object>(OnCloseWindow));
+            SetColor = new SimpleCommand(new Action<object>(OnSetColor));
+        }
 
         /// <summary>
         /// Retrieve property value
@@ -73,6 +84,24 @@ namespace LightImageViewer.Utilities
         public void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        /// <summary>
+        /// Change color button click handler
+        /// </summary>
+        /// <param name="color"></param>
+        private void OnSetColor(object color)
+        {
+            SetProperty(color, "BackgroundColor");
+        }
+
+        /// <summary>
+        /// Close window handler
+        /// </summary>
+        /// <param name="color"></param>
+        private void OnCloseWindow(object window)
+        {
+            (window as System.Windows.Window).Close();
         }
     }
 }

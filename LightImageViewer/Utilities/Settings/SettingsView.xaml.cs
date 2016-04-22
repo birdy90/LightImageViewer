@@ -19,10 +19,36 @@ namespace LightImageViewer.Utilities
     /// </summary>
     public partial class SettingsView : Window
     {
+        /// <summary>
+        /// If shift button is pressed
+        /// </summary>
+        private bool ShiftPressed { get { return (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)); } }
+
+        /// <summary>
+        /// If control button is pressed
+        /// </summary>
+        private bool CtrlPressed { get { return (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)); } }
+
+        /// <summary>
+        /// If alt button is pressed
+        /// </summary>
+        private bool AltPressed { get { return (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt)); } }
+
         public SettingsView()
         {
             DataContext = Settings.Instance;
             InitializeComponent();
+        }
+        
+        private void MyWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!ShiftPressed && !CtrlPressed && !AltPressed)
+                switch (e.Key)
+                {
+                    case Key.Escape:
+                        this.Close();
+                        break;
+                }
         }
     }
 }
