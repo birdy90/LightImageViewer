@@ -9,7 +9,7 @@
         ScrollViewer.HorizontalScrollBarVisibility="Hidden" Loaded="Window_Loaded" MouseWheel="Window_MouseWheel" KeyDown="MyWindow_KeyDown" AllowsTransparency="True" WindowStyle="None" SnapsToDevicePixels="True">
 
     <Window.Background>
-        <SolidColorBrush Color="Black" Opacity="0.7"/>
+        <SolidColorBrush Color="{Binding BackgroundColor}" Opacity="{Binding Opacity}"/>
     </Window.Background>
 
     <Window.ContextMenu>
