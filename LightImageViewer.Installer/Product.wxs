@@ -4,7 +4,7 @@
 	<Product Id="*"
            Name="LightImageViewer"
            Language="1033"
-           Version="0.1.0.4"
+           Version="0.2.1.1"
            Manufacturer="Grigory Bederdinov"
            UpgradeCode="{41BD0128-5978-4898-826B-15F1453A3039}">
 		<Package InstallerVersion="405"
