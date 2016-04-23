@@ -12,6 +12,7 @@ using LightImageViewer.FileFormats;
 using System.Windows.Media.Imaging;
 using LightImageViewer.Utilities.ViewModels;
 using LightImageViewer.Utilities;
+using LightImageViewer.Utilities.Helpers;
 
 namespace LightImageViewer
 {
@@ -70,7 +71,7 @@ namespace LightImageViewer
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel();
+            DataContext = new MainWindowViewModel(this);
             FileList.PathChanged += UpdateLabels;
             canvas.ImageStartLoading += ToggleLoadingRect;
             canvas.ImageLoaded += ToggleLoadingRect;
@@ -335,9 +336,7 @@ namespace LightImageViewer
                             Process.Start(psPath, FileList.CurrentDirectory);
                         break;
                     case Key.O:
-                        var optionsWindow = new SettingsView();
-                        optionsWindow.Owner = this;
-                        optionsWindow.ShowDialog();
+                        OpenSettingsWindowHandler(null, null);
                         break;
                     case Key.Left:
                         if (!(canvas.Bmp is IMultiPages)) return;
@@ -352,6 +351,18 @@ namespace LightImageViewer
                         UpdateLabels();
                         break;
                 }
+        }
+
+        /// <summary>
+        /// Open settings window handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void OpenSettingsWindowHandler(object sender, RoutedEventArgs e)
+        {
+            var optionsWindow = new SettingsView();
+            optionsWindow.Owner = this;
+            optionsWindow.ShowDialog();
         }
 
         #endregion
